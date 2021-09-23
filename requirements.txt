@@ -1,0 +1,5 @@
+asyncpg
+discord.py
+discord
+jishaku
+ruamel.yaml

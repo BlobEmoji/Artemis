@@ -1,0 +1,35 @@
+bot:
+    owner_id: 298516367311765505
+    token: "token"
+    prefix: "f!"
+
+postgres:
+    user: "postgres"
+    password: "password"
+
+discord:
+    guild_id:
+        576219366929203210
+    submission_channel_id: 647903666069831701
+    queue_channel_id: 647903706460717059
+    gallery_channel_id: 647903950368014336
+
+emojis:
+    -   yes: '<:greentick:567088336166977536>'
+        no: '<:redtick:567088349484023818>'
+        na: '<:blobshh:580593447833042954>'
+    -   date:
+        backward: "◀️"
+        default: "🔽"
+        forward: "▶️"
+    -   lock: "🔒"
+
+month: 11
+
+year: 2019
+
+prompts:
+    - "prompts"
+
+prompts_image_links:
+    - "https://i.imgur.com/AVBI0py.png"
