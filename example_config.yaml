@@ -1,35 +1,86 @@
 bot:
-    owner_id: 298516367311765505
-    token: "token"
-    prefix: "f!"
-
-postgres:
-    user: "postgres"
-    password: "password"
+    token: "meow meow aeong us"
 
 discord:
     guild_id:
-        576219366929203210
-    submission_channel_id: 647903666069831701
-    queue_channel_id: 647903706460717059
-    gallery_channel_id: 647903950368014336
+        69696969696969
+    info_message_id:
+        69696969696969
+    prompt_list_message_id:
+        69696969696969
+    submission_channel_id: 69696969696969
+    queue_channel_id: 69696969696969
+    gallery_channel_id: 69696969696969
+    embed_color: 13838633
+    event_role_id: 69696969696969
 
-emojis:
-    -   yes: '<:greentick:567088336166977536>'
-        no: '<:redtick:567088349484023818>'
-        na: '<:blobshh:580593447833042954>'
-    -   date:
-        backward: "◀️"
-        default: "🔽"
-        forward: "▶️"
-    -   lock: "🔒"
-
-month: 11
-
-year: 2019
+start_day: 2021-09-01
 
 prompts:
-    - "prompts"
+    - "Alone"
+    - "Connection"
+    - "Feast"
+    - "Wrap"
+    - "Pinecone"
+    - "Flight"
+    - "Frost"
+    - "Music"
+    - "Family"
+    - "Assembly"
+    - "Horse"
+    - "Flower"
+    - "Lights"
+    - "Giving"
+    - "Drink"
+    - "Sport"
+    - "Pumpkin"
+    - "Errand"
+    - "Magical"
+    - "Sweater"
+    - "Season"
+    - "Zodiac"
+    - "Pole"
+    - "Anticipation"
+    - "Present"
+    - "Box"
+    - "Candy"
+    - "Animal"
+    - "Menorah"
+    - "Souvenir"
+    - "Finale"
 
 prompts_image_links:
-    - "https://i.imgur.com/AVBI0py.png"
+    - "https://i.imgur.com/9Ot89wd.png"
+    - "https://i.imgur.com/hWbcs7e.png"
+    - "https://i.imgur.com/VTeuhbe.png"
+    - "https://i.imgur.com/krlNyoh.png"
+    - "https://i.imgur.com/hFlFEQj.png"
+    - "https://i.imgur.com/Mwvop3f.png"
+    - "https://i.imgur.com/jk0VOhM.png"
+    - "https://i.imgur.com/OMn2oLi.png"
+    - "https://i.imgur.com/zORELDL.png"
+    - "https://i.imgur.com/CXFssTB.png"
+    - "https://i.imgur.com/3jj14PB.png"
+    - "https://i.imgur.com/MMyxdrJ.png"
+    - "https://i.imgur.com/ln1llbe.png"
+    - "https://i.imgur.com/lhbdh95.png"
+    - "https://i.imgur.com/bKLl9I9.png"
+    - "https://i.imgur.com/7IsdQ6x.png"
+    - "https://i.imgur.com/Gevkd0V.png"
+    - "https://i.imgur.com/QzwSuOd.png"
+    - "https://i.imgur.com/yifbumn.png"
+    - "https://i.imgur.com/tYH1o2J.png"
+    - "https://i.imgur.com/LkMny9U.png"
+    - "https://i.imgur.com/5jIhBLn.png"
+    - "https://i.imgur.com/LO4IsGt.png"
+    - "https://i.imgur.com/0vvExbT.png"
+    - "https://i.imgur.com/im97Ds4.png"
+    - "https://i.imgur.com/eS7pc2r.png"
+    - "https://i.imgur.com/xOhrPnM.png"
+    - "https://i.imgur.com/nUxaZfU.png"
+    - "https://i.imgur.com/mqnqS5f.png"
+    - "https://i.imgur.com/h3gV86u.png"
+    - "https://i.imgur.com/HhEIUx1.png"
+    - "https://i.imgur.com/Upq6HZa.png"
+    - "https://i.imgur.com/dBBIfSG.png"
+    - "https://i.imgur.com/oBqETvm.png"
