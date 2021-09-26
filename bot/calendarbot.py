@@ -1,12 +1,13 @@
-import datetime
 import asyncio
+import datetime
 
 import asyncpg
 from discord.ext import commands
 from discord.ext.commands import Bot
 
+from .config import prompts, start_day, token
 from .daily import do_daily
-from .config import token, prompts, start_day
+
 
 class CalendarBot(Bot):
     def __init__(self):
@@ -16,7 +17,9 @@ class CalendarBot(Bot):
     def topic(self):
         current_day = (datetime.datetime.utcnow().date() - start_day).days
 
-        accepted_days = [f'{prompts[i]} ({i})' for i in range(current_day-1, current_day+2) if prompts.get(i) is not None]
+        accepted_days = [
+            f'{prompts[i]} ({i})' for i in range(current_day - 1, current_day + 2) if prompts.get(i) is not None
+        ]
 
         accepted_days[-1] = f'and {accepted_days[-1]}' if len(accepted_days) > 1 else accepted_days[-1]
 
@@ -34,19 +37,16 @@ class CalendarBot(Bot):
 
         super().run(token)
 
-
     async def on_ready(self):
-        if not  self.can_start_daily:
+        if not self.can_start_daily:
             return
 
         await asyncio.sleep(10)
 
         self.can_start_daily = False
 
-
-
     async def start(self, *args, **kwargs):
         await asyncio.sleep(1)
-        self.pool= await asyncpg.create_pool(user="postgres", host="db")
+        self.pool = await asyncpg.create_pool(user="postgres", host="db")
 
         return await super().start(*args, **kwargs)

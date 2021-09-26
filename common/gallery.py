@@ -2,11 +2,14 @@ import discord
 
 
 async def get_gallery_embed(bot, link):
-    submission = await bot.pool.fetchrow('''
+    submission = await bot.pool.fetchrow(
+        '''
     SELECT * FROM submissions
     WHERE
         image_link = $1
-    ''', link)
+    ''',
+        link,
+    )
 
     if not submission:
         return False
@@ -25,7 +28,11 @@ async def get_gallery_embed(bot, link):
     except:
         return False
 
-    e = discord.Embed(title=f'{bot.c.get_prompt(submission["day_num"])} ({submission["day_num"]})', color=bot.c.embed_color, timestamp=umsg.created_at)
+    e = discord.Embed(
+        title=f'{bot.c.get_prompt(submission["day_num"])} ({submission["day_num"]})',
+        color=bot.c.embed_color,
+        timestamp=umsg.created_at,
+    )
     e.set_image(url=submission['image_link'])
     e.set_author(name=umsg.author.name, icon_url=umsg.author.avatar_url)
 
