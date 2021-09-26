@@ -3,18 +3,21 @@ bot:
 
 discord:
     guild_id:
-        69696969696969
+        403263819784257536
     info_message_id:
-        69696969696969
-    prompt_list_message_id:
-        69696969696969
-    submission_channel_id: 69696969696969
-    queue_channel_id: 69696969696969
-    gallery_channel_id: 69696969696969
+        891728626549141544
+    current_prompts_message_id:
+        891728999737335868
+    submission_channel_id: 891363011560865863
+    queue_channel_id: 891362984369221692
+    gallery_channel_id: 891363061116596284
     embed_color: 13838633
-    event_role_id: 69696969696969
+    event_role_id: 650479810358935565
+    event_name: "Drawfest"
 
 start_day: 2021-09-01
+end_day: 2021-10-01
+days_per_prompt: 3
 
 prompts:
     - "Alone"
