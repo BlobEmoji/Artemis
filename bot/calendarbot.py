@@ -1,24 +1,23 @@
 import asyncio
-import datetime
+from typing import Optional
 
 import asyncpg
 from discord.ext import commands
-from discord.ext.commands import Bot
 
-from .config import prompts, start_day, token
+from .config import token
 
 
-class CalendarBot(Bot):
+class CalendarBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='f!')
+
+        self.pool: Optional[asyncpg.Pool] = None
 
     def run(self):
         cogs = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts']
 
         for cog in cogs:
             self.load_extension(cog)
-
-        self.can_start_daily = True
 
         super().run(token)
 
