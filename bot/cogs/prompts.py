@@ -4,7 +4,9 @@ import datetime
 from discord.ext import commands
 
 from bot import CalendarBot
+
 from .. import config
+
 
 info_message_format = f"""
 Welcome to {config.event_name} {config.start_day.year}!
@@ -13,6 +15,7 @@ In this event, 2 prompts are revealed every {config.days_per_prompt} days, and y
 
 """
 
+
 class Prompts(commands.Cog):
     def __init__(self, bot: CalendarBot):
         self.bot = bot
@@ -20,7 +23,7 @@ class Prompts(commands.Cog):
     @property
     def current_day(self):
         return (datetime.datetime.now().date() - config.start_day).days
-    
+
     @property
     def current_prompt_number(self):
         return self.current_day // config.days_per_prompt
@@ -41,14 +44,18 @@ class Prompts(commands.Cog):
         if self.before_event:
             prompt_message = f'Event starts on {config.start_day}'
         elif self.during_event:
-            prompt_message = f'Current Prompt: {config.prompts[self.current_prompt_number]} ({self.current_prompt_number})'
+            prompt_message = (
+                f'Current Prompt: {config.prompts[self.current_prompt_number]} ({self.current_prompt_number})'
+            )
         else:
             prompt_message = 'The event has ended'
 
         return f'{prompt_message}\nCheck pins for more info.'
-    
+
     def get_info_message(self):
-        past_prompts = "\n".join(f'{i+1}. {config.prompts[i]}' for i in range(self.current_prompt_number) if i < len(config.prompts))
+        past_prompts = "\n".join(
+            f'{i+1}. {config.prompts[i]}' for i in range(self.current_prompt_number) if i < len(config.prompts)
+        )
 
         info_message = info_message_format
 
@@ -63,14 +70,6 @@ class Prompts(commands.Cog):
             info_message += f'Previous  Prompts:\n{past_prompts}'
 
         return info_message
-
-
-
-        
-
-
-
-
 
 
 def setup(bot):

@@ -4,7 +4,9 @@ import datetime
 from discord.ext import commands, tasks
 
 from bot import CalendarBot
+
 from .. import config
+
 
 class Tasks(commands.Cog):
     def __init__(self, bot: CalendarBot):
@@ -12,7 +14,7 @@ class Tasks(commands.Cog):
 
         if bot.is_ready():
             asyncio.create_task(self.on_ready())
-    
+
     @commands.Cog.listener()
     async def on_ready(self):
         self.new_day.start()
@@ -33,7 +35,7 @@ class Tasks(commands.Cog):
 
         if info_message is not None and info_message.author.id == self.bot.user.id:
             await info_message.edit(content=prompts.get_info_message())
-        
+
         if prompt_message is not None and prompt_message.author.id == self.bot.user.id:
             await prompt_message.edit(content=config.prompts_image_links[prompts.current_prompt_number])
 
@@ -41,6 +43,7 @@ class Tasks(commands.Cog):
 
         if self.new_day.current_loop != 0:
             await submission_channel.send(day_number)
+
 
 def setup(bot):
     bot.add_cog(Tasks(bot))

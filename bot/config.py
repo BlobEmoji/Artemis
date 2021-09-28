@@ -13,7 +13,7 @@ queue_channel_id = data['discord']['queue_channel_id']
 submission_channel_id = data['discord']['submission_channel_id']
 gallery_channel_id = data['discord']['gallery_channel_id']
 
-#Event Info
+# Event Info
 event_name = data['discord']['event_name']
 
 # Event Info Messages
