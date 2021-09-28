@@ -1,11 +1,8 @@
-import asyncio
 import datetime
 
 from discord.ext import commands
 
-from bot import CalendarBot
-
-from .. import config
+from .. import CalendarBot, config
 
 
 info_message_format = f"""
