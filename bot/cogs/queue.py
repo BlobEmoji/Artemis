@@ -111,6 +111,9 @@ class Queue(commands.Cog):
         if prompts is None:
             return
 
+        if prompts.current_prompt is None:
+            return
+
         if TYPE_CHECKING:
             assert isinstance(channel, discord.TextChannel)
 
