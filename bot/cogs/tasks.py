@@ -43,18 +43,20 @@ class Tasks(commands.Cog):
         await submission_channel.edit(topic=prompts.get_topic())
 
         info_message = await submission_channel.fetch_message(config.info_message_id)
-        prompt_message = await submission_channel.fetch_message(config.current_prompts_message_id)
 
         if info_message is not None and info_message.author == self.bot.user:
             await info_message.edit(content=prompts.get_info_message())
 
+        if prompts.current_prompt is None:
+            return
+
+        prompt_message = await submission_channel.fetch_message(config.current_prompts_message_id)
+
         if prompt_message is not None and prompt_message.author == self.bot.user:
             await prompt_message.edit(content=config.prompts_image_links[prompts.current_day])
 
-        day_number = (datetime.datetime.now().date() - config.start_day).days
-
         if self.new_day.current_loop != 0:
-            await submission_channel.send(day_number)
+            await submission_channel.send(f"It's a new day! The current prompt is {prompts.current_prompt}")
 
 
 def setup(bot):

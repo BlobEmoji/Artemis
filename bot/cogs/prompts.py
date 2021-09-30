@@ -23,7 +23,10 @@ class Prompts(commands.Cog):
 
     @property
     def current_prompt(self):
-        return config.prompts[self.current_prompt_number]
+        try:
+            return config.prompts[self.current_prompt_number]
+        except IndexError:
+            return None
 
     @property
     def current_prompt_number(self):
