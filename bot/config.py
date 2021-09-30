@@ -22,6 +22,7 @@ current_prompts_message_id = data['discord']['current_prompts_message_id']
 
 # Event Role
 event_role_id = data['discord']['event_role_id']
+event_role_requirement = data['event_role_requirement']
 
 # Event Embed Color
 embed_color = data['discord']['embed_color']

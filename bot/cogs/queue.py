@@ -1,134 +1,230 @@
+from __future__ import annotations
+
+import enum
+import functools
+import re
+from typing import TYPE_CHECKING, Optional
+
 import discord
 from discord.ext import commands
 
-from bot import CalendarBot
-from common import get_gallery_embed, url_extractor
-
-from .. import config
+from .. import CalendarBot, config
 
 
-async def process_queue(bot: CalendarBot, im_link, message):
-    guild = bot.get_guild(config.event_guild_id)
-    queue_channel = guild.get_channel(config.queue_channel_id)
-    e = discord.Embed(
-        description=(message.content + '\n\n' if message.content else '')
-        + f'**>** [Link to original post]({message.jump_url})'
-    ).set_image(url=im_link)
+if TYPE_CHECKING:
+    from .prompts import Prompts
 
-    in_queue = await bot.pool.fetchval(
-        """
-        SELECT in_queue FROM submissions
-        WHERE image_link = $1;
-    """,
-        im_link,
-    )
 
-    if not in_queue:
-        queue_message = await queue_channel.send(embed=e)
+class SubmissionStatus(enum.Enum):
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    DENIED = 'denied'
+    DISMISSED = 'dismissed'
 
-        if in_queue == False:
-            await bot.pool.execute(
-                """
-            UPDATE submissions
-            SET queue_post_id = $1,
-                in_queue = true
-            WHERE
-                image_link = $2
-            """,
-                queue_message.id,
-                im_link,
-            )
-        else:
-            await bot.pool.execute(
-                """
-            INSERT INTO submissions(user_id, user_post_id, queue_post_id, image_link)
-            VALUES
-            ($1, $2, $3, $4);
-            """,
-                message.author.id,
-                message.id,
-                queue_message.id,
-                im_link,
+
+def wrap_interface_button(f):
+    @functools.wraps(f)
+    async def wrapper(self: QueueInterface, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        assert self.cog.bot.pool is not None
+        assert interaction.message is not None
+
+        async with self.cog.bot.pool.acquire() as conn:
+            submission_id = await conn.fetchval(
+                'SELECT id FROM submissions WHERE queue_message_id = $1', interaction.message.id
             )
 
-        [await queue_message.add_reaction(i) for i in [config.na_emoji, config.yes_emoji, config.no_emoji]]
+        await f(self, submission_id)
+        await interaction.message.delete()
+
+    return wrapper
+
+
+class QueueInterface(discord.ui.View):
+    def __init__(self, cog: Queue):
+        super().__init__(timeout=None)
+
+        self.cog = cog
+
+    @discord.ui.button(label='Approve', custom_id='approve', style=discord.ButtonStyle.green)  # type: ignore
+    @wrap_interface_button
+    async def approve(self, submission_id: int):
+        await self.cog.approve_submission(submission_id)
+
+    @discord.ui.button(label='Reject', custom_id='reject', style=discord.ButtonStyle.red)  # type: ignore
+    @wrap_interface_button
+    async def reject(self, submission_id: int):
+        await self.cog.reject_submission(submission_id)
+
+    @discord.ui.button(label='Dismiss', custom_id='dismiss', style=discord.ButtonStyle.gray)  # type: ignore
+    @wrap_interface_button
+    async def dismiss(self, submission_id: int):
+        await self.cog.dismiss_submission(submission_id)
 
 
 class Queue(commands.Cog):
     def __init__(self, bot: CalendarBot):
         self.bot = bot
 
+        view = QueueInterface(self)
+        bot.loop.call_later(0, bot.add_view, view)
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if config.submission_channel_id != message.channel.id:
+        if config.submission_channel_id == message.channel.id:
+            await self._process_message(message)
+
+    @commands.Cog.listener()
+    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
+        if payload.channel_id != config.submission_channel_id:
             return
-        images = url_extractor.findall(message.clean_content) + [a.url for a in message.attachments]
-        for i in images:
-            await process_queue(self.bot, i, message)
 
-    @commands.Cog.listener()
-    async def on_raw_message_delete(self, payload):
-        if payload.channel_id == config.submission_channel_id:
-            guild = self.bot.get_guild(config.event_guild_id)
-            channel = guild.get_channel(config.queue_channel_id)
-            submissions = await self.bot.pool.fetch(
-                '''
-                SELECT * FROM submissions
-                WHERE 
-                    user_post_id = $1
-            ''',
-                payload.message_id,
-            )
+        channel = self.bot.get_channel(config.submission_channel_id)
 
-            for submission in submissions:
-                if submission['in_queue']:
-                    msg = None
-                    try:
-                        msg = await channel.fetch_message(submission['queue_post_id'])
-                    except:
-                        pass
-                    finally:
-                        if msg:
-                            await msg.delete()
-                        await self.bot.pool.execute(
-                            """
-                            UPDATE submissions
-                            SET in_queue = false,
-                                approved = false
-                            WHERE
-                                image_link = $1
-                        """,
-                            submission['image_link'],
-                        )
-                else:
-                    if submission['gallery_post_id']:
-                        msg = await channel.fetch_message(submission['gallery_post_id'])
-                        await msg.delete()
-                        await self.bot.pool.execute(
-                            """
-                        UPDATE submissions
-                        SET in_queue = false,
-                            approved = false
-                        WHERE
-                            image_link = $1
-                        """,
-                            submission['image_link'],
-                        )
+        if TYPE_CHECKING:
+            assert isinstance(channel, discord.TextChannel)
 
-    @commands.Cog.listener()
-    async def on_raw_message_edit(self, payload):
-        guild = self.bot.get_guild(config.event_guild_id)
-        channel = guild.get_channel(config.submission_channel_id)
         try:
             message = await channel.fetch_message(payload.message_id)
-        except discord.errors.NotFound:
+        except discord.NotFound:
             return
 
-        images = url_extractor.findall(message.clean_content) + [a.url for a in message.attachments]
+        await self._process_message(message)
 
-        for i in images:
-            await process_queue(self.bot, i, message)
+    async def _process_message(self, message: discord.Message):
+        urls = re.findall(r'(https?://\S+)', message.content)
+        attachment_urls = [a.url for a in message.attachments]
+
+        for url in urls + attachment_urls:
+            await self._process_submission(message, url)
+
+    async def _process_submission(self, message: discord.Message, url: str):
+        assert self.bot.pool is not None
+
+        channel = self.bot.get_channel(config.queue_channel_id)
+        prompts: Optional[Prompts] = self.bot.get_cog('Prompts')  # type: ignore
+
+        if prompts is None:
+            return
+
+        if TYPE_CHECKING:
+            assert isinstance(channel, discord.TextChannel)
+
+        prompt = await channel.send(
+            f'**{prompts.current_prompt}** submission by **{message.author}** {message.author.mention}\n\n{url}',
+            view=QueueInterface(self),
+        )
+
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO submissions (user_id, image_url, prompt_idx, status, message_id, queue_message_id)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                """,
+                message.author.id,
+                url,
+                prompts.current_prompt_number,
+                SubmissionStatus.PENDING.value,
+                message.id,
+                prompt.id,
+            )
+
+    async def approve_submission(self, submission_id: int):
+        assert self.bot.pool is not None
+
+        async with self.bot.pool.acquire() as conn:
+            record = await conn.fetchrow(
+                """
+                SELECT user_id, image_url, prompt_idx
+                FROM submissions
+                WHERE id = $1
+                """,
+                submission_id,
+            )
+
+        guild = self.bot.get_guild(config.event_guild_id)
+
+        if guild is None:
+            return
+
+        member = guild.get_member(record['user_id'])
+
+        if member is None:
+            return
+
+        prompt_idx = record['prompt_idx']
+        prompt = config.prompts[prompt_idx]
+
+        embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx})')
+
+        embed.color = config.embed_color
+        embed.set_image(url=record['image_url'])
+
+        embed.set_author(name=str(member), icon_url=member.display_avatar.url)
+
+        channel = self.bot.get_channel(config.gallery_channel_id)
+
+        if TYPE_CHECKING:
+            assert isinstance(channel, discord.TextChannel)
+
+        message = await channel.send(embed=embed)
+
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute(
+                'UPDATE submissions SET status = $1, gallery_message_id = $2 WHERE id = $3',
+                SubmissionStatus.APPROVED.value,
+                message.id,
+                submission_id,
+            )
+
+            approved = await conn.fetchval(
+                'SELECT COUNT(*) FROM submissions WHERE user_id = $1 AND status = \'approved\'', member.id
+            )
+
+        if approved >= config.event_role_requirement:
+            await member.add_roles(discord.Object(config.event_role_id), reason='Event participation')
+
+    async def reject_submission(self, submission_id: int):
+        submission = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
+
+        user = self.bot.get_user(submission['user_id'])
+
+        if user is None:
+            return
+
+        prompt = config.prompts[submission['prompt_idx']]
+
+        try:
+            await user.send(
+                f'Your {prompt} Drawfest submission has been denied by a staff member.\n\n'
+                f'Please review that your submission was made according to our rules, '
+                f'if you\'re confused about the denial feel free to DM Blob Mail.',
+                allowed_mentions=discord.AllowedMentions(users=[user]),
+            )
+        except discord.HTTPException:
+            return
+
+    async def dismiss_submission(self, submission_id: int):
+        await self._update_submission_status(submission_id, SubmissionStatus.DISMISSED)
+
+    async def _update_submission_status(self, submission_id: int, status: SubmissionStatus):
+        assert self.bot.pool is not None
+
+        async with self.bot.pool.acquire() as conn:
+            record = await conn.fetchrow(
+                """
+                UPDATE submissions
+                SET status = $2
+                WHERE id = $1
+                RETURNING id, user_id, image_url, prompt_idx, status, message_id, queue_message_id, gallery_message_id
+                """,
+                submission_id,
+                status.value,
+            )
+
+        return record
 
 
-def setup(bot):
+def setup(bot: CalendarBot):
     bot.add_cog(Queue(bot))

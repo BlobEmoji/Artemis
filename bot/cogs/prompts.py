@@ -22,6 +22,10 @@ class Prompts(commands.Cog):
         return (datetime.datetime.now().date() - config.start_day).days
 
     @property
+    def current_prompt(self):
+        return config.prompts[self.current_prompt_number]
+
+    @property
     def current_prompt_number(self):
         return self.current_day // config.days_per_prompt
 
@@ -41,9 +45,7 @@ class Prompts(commands.Cog):
         if self.before_event:
             prompt_message = f'Event starts on {config.start_day}'
         elif self.during_event:
-            prompt_message = (
-                f'Current Prompt: {config.prompts[self.current_prompt_number]} ({self.current_prompt_number})'
-            )
+            prompt_message = f'Current Prompt: {self.current_prompt} ({self.current_prompt_number})'
         else:
             prompt_message = 'The event has ended'
 
