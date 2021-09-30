@@ -49,7 +49,7 @@ class Tasks(commands.Cog):
             await info_message.edit(content=prompts.get_info_message())
 
         if prompt_message is not None and prompt_message.author == self.bot.user:
-            await prompt_message.edit(content=config.prompts_image_links[prompts.current_prompt_number])
+            await prompt_message.edit(content=config.prompts_image_links[prompts.current_day])
 
         day_number = (datetime.datetime.now().date() - config.start_day).days
 
