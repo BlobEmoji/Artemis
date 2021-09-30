@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.ext import commands
 
-from .. import CalendarBot, config
+from .. import Artemis, config
 
 
 if TYPE_CHECKING:
@@ -64,7 +64,7 @@ class QueueInterface(discord.ui.View):
 
 
 class Queue(commands.Cog):
-    def __init__(self, bot: CalendarBot):
+    def __init__(self, bot: Artemis):
         self.bot = bot
 
         view = QueueInterface(self)
@@ -226,5 +226,5 @@ class Queue(commands.Cog):
         return record
 
 
-def setup(bot: CalendarBot):
+def setup(bot: Artemis):
     bot.add_cog(Queue(bot))

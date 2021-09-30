@@ -2,7 +2,7 @@ import datetime
 
 from discord.ext import commands
 
-from .. import CalendarBot, config
+from .. import Artemis, config
 
 
 info_message_format = f"""
@@ -14,7 +14,7 @@ In this event, 2 prompts are revealed every {config.days_per_prompt} days, and y
 
 
 class Prompts(commands.Cog):
-    def __init__(self, bot: CalendarBot):
+    def __init__(self, bot: Artemis):
         self.bot = bot
 
     @property

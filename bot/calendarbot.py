@@ -8,7 +8,7 @@ from discord.ext import commands
 from .config import token
 
 
-class CalendarBot(commands.Bot):
+class Artemis(commands.Bot):
     def __init__(self):
         intents = discord.Intents(guilds=True, members=True, guild_messages=True)
         super().__init__(command_prefix='f!', intents=intents)

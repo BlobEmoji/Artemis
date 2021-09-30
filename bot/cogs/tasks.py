@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.ext import commands, tasks
 
-from .. import CalendarBot, config
+from .. import Artemis, config
 from .prompts import Prompts
 
 
 class Tasks(commands.Cog):
-    def __init__(self, bot: CalendarBot):
+    def __init__(self, bot: Artemis):
         self.bot = bot
 
         if bot.is_ready():

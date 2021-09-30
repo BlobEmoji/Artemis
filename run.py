@@ -1,5 +1,5 @@
-from bot import CalendarBot, setup_logging
+from bot import Artemis, setup_logging
 
 
 with setup_logging():
-    CalendarBot().run()
+    Artemis().run()

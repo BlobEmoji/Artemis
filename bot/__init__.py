@@ -1,2 +1,2 @@
-from .calendarbot import CalendarBot
+from .calendarbot import Artemis
 from .logging import setup_logging
