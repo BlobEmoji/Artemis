@@ -93,6 +93,9 @@ class Queue(commands.Cog):
         await self._process_message(message)
 
     async def _process_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
         urls = re.findall(r'(https?://\S+)', message.content)
         attachment_urls = [a.url for a in message.attachments]
 
