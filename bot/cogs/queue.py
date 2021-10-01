@@ -93,6 +93,9 @@ class Queue(commands.Cog):
         await self._process_message(message)
 
     async def _process_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
         urls = re.findall(r'(https?://\S+)', message.content)
         attachment_urls = [a.url for a in message.attachments]
 
@@ -106,6 +109,9 @@ class Queue(commands.Cog):
         prompts: Optional[Prompts] = self.bot.get_cog('Prompts')  # type: ignore
 
         if prompts is None:
+            return
+
+        if prompts.current_prompt is None:
             return
 
         if TYPE_CHECKING:
