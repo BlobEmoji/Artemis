@@ -1,89 +1,91 @@
 bot:
-    token: "meow meow aeong us"
+  token: "meow meow aeong us"
 
 discord:
-    guild_id:
-        403263819784257536
-    info_message_id:
-        891728626549141544
-    current_prompts_message_id:
-        891728999737335868
-    submission_channel_id: 891363011560865863
-    queue_channel_id: 891362984369221692
-    gallery_channel_id: 891363061116596284
-    embed_color: 13838633
-    event_role_id: 650479810358935565
-    event_name: "Drawfest"
+  guild_id: 403263819784257536
+  info_message_id: 891728626549141544
+  current_prompts_message_id: 891728999737335868
+  submission_channel_id: 891363011560865863
+  queue_channel_id: 891362984369221692
+  gallery_channel_id: 891363061116596284
+  embed_color: 13838633
+  event_role_id: 650479810358935565
+  event_name: "Drawfest"
 
 start_day: 2021-09-01
 end_day: 2021-10-01
 days_per_prompt: 3
 
+event_role_requirement: 4
+
+statistics_endpoint: "https://files.lostluma.dev/drawtober-2021.json"
+statistics_authorization: "blobwob"
+
 prompts:
-    - "Alone"
-    - "Connection"
-    - "Feast"
-    - "Wrap"
-    - "Pinecone"
-    - "Flight"
-    - "Frost"
-    - "Music"
-    - "Family"
-    - "Assembly"
-    - "Horse"
-    - "Flower"
-    - "Lights"
-    - "Giving"
-    - "Drink"
-    - "Sport"
-    - "Pumpkin"
-    - "Errand"
-    - "Magical"
-    - "Sweater"
-    - "Season"
-    - "Zodiac"
-    - "Pole"
-    - "Anticipation"
-    - "Present"
-    - "Box"
-    - "Candy"
-    - "Animal"
-    - "Menorah"
-    - "Souvenir"
-    - "Finale"
+  - "Alone"
+  - "Connection"
+  - "Feast"
+  - "Wrap"
+  - "Pinecone"
+  - "Flight"
+  - "Frost"
+  - "Music"
+  - "Family"
+  - "Assembly"
+  - "Horse"
+  - "Flower"
+  - "Lights"
+  - "Giving"
+  - "Drink"
+  - "Sport"
+  - "Pumpkin"
+  - "Errand"
+  - "Magical"
+  - "Sweater"
+  - "Season"
+  - "Zodiac"
+  - "Pole"
+  - "Anticipation"
+  - "Present"
+  - "Box"
+  - "Candy"
+  - "Animal"
+  - "Menorah"
+  - "Souvenir"
+  - "Finale"
 
 prompts_image_links:
-    - "https://i.imgur.com/9Ot89wd.png"
-    - "https://i.imgur.com/hWbcs7e.png"
-    - "https://i.imgur.com/VTeuhbe.png"
-    - "https://i.imgur.com/krlNyoh.png"
-    - "https://i.imgur.com/hFlFEQj.png"
-    - "https://i.imgur.com/Mwvop3f.png"
-    - "https://i.imgur.com/jk0VOhM.png"
-    - "https://i.imgur.com/OMn2oLi.png"
-    - "https://i.imgur.com/zORELDL.png"
-    - "https://i.imgur.com/CXFssTB.png"
-    - "https://i.imgur.com/3jj14PB.png"
-    - "https://i.imgur.com/MMyxdrJ.png"
-    - "https://i.imgur.com/ln1llbe.png"
-    - "https://i.imgur.com/lhbdh95.png"
-    - "https://i.imgur.com/bKLl9I9.png"
-    - "https://i.imgur.com/7IsdQ6x.png"
-    - "https://i.imgur.com/Gevkd0V.png"
-    - "https://i.imgur.com/QzwSuOd.png"
-    - "https://i.imgur.com/yifbumn.png"
-    - "https://i.imgur.com/tYH1o2J.png"
-    - "https://i.imgur.com/LkMny9U.png"
-    - "https://i.imgur.com/5jIhBLn.png"
-    - "https://i.imgur.com/LO4IsGt.png"
-    - "https://i.imgur.com/0vvExbT.png"
-    - "https://i.imgur.com/im97Ds4.png"
-    - "https://i.imgur.com/eS7pc2r.png"
-    - "https://i.imgur.com/xOhrPnM.png"
-    - "https://i.imgur.com/nUxaZfU.png"
-    - "https://i.imgur.com/mqnqS5f.png"
-    - "https://i.imgur.com/h3gV86u.png"
-    - "https://i.imgur.com/HhEIUx1.png"
-    - "https://i.imgur.com/Upq6HZa.png"
-    - "https://i.imgur.com/dBBIfSG.png"
-    - "https://i.imgur.com/oBqETvm.png"
+  - "https://i.imgur.com/9Ot89wd.png"
+  - "https://i.imgur.com/hWbcs7e.png"
+  - "https://i.imgur.com/VTeuhbe.png"
+  - "https://i.imgur.com/krlNyoh.png"
+  - "https://i.imgur.com/hFlFEQj.png"
+  - "https://i.imgur.com/Mwvop3f.png"
+  - "https://i.imgur.com/jk0VOhM.png"
+  - "https://i.imgur.com/OMn2oLi.png"
+  - "https://i.imgur.com/zORELDL.png"
+  - "https://i.imgur.com/CXFssTB.png"
+  - "https://i.imgur.com/3jj14PB.png"
+  - "https://i.imgur.com/MMyxdrJ.png"
+  - "https://i.imgur.com/ln1llbe.png"
+  - "https://i.imgur.com/lhbdh95.png"
+  - "https://i.imgur.com/bKLl9I9.png"
+  - "https://i.imgur.com/7IsdQ6x.png"
+  - "https://i.imgur.com/Gevkd0V.png"
+  - "https://i.imgur.com/QzwSuOd.png"
+  - "https://i.imgur.com/yifbumn.png"
+  - "https://i.imgur.com/tYH1o2J.png"
+  - "https://i.imgur.com/LkMny9U.png"
+  - "https://i.imgur.com/5jIhBLn.png"
+  - "https://i.imgur.com/LO4IsGt.png"
+  - "https://i.imgur.com/0vvExbT.png"
+  - "https://i.imgur.com/im97Ds4.png"
+  - "https://i.imgur.com/eS7pc2r.png"
+  - "https://i.imgur.com/xOhrPnM.png"
+  - "https://i.imgur.com/nUxaZfU.png"
+  - "https://i.imgur.com/mqnqS5f.png"
+  - "https://i.imgur.com/h3gV86u.png"
+  - "https://i.imgur.com/HhEIUx1.png"
+  - "https://i.imgur.com/Upq6HZa.png"
+  - "https://i.imgur.com/dBBIfSG.png"
+  - "https://i.imgur.com/oBqETvm.png"

@@ -35,3 +35,7 @@ days_per_prompt = data['days_per_prompt']
 # Event Prompts
 prompts = data['prompts']
 prompts_image_links = data['prompts_image_links']
+
+# Statistics endpoint
+statistics_endpoint = data['statistics_endpoint']
+statistics_authorization = data['statistics_authorization']

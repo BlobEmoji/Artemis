@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import functools
+import logging
 import re
 from typing import TYPE_CHECKING, Optional
 
@@ -13,6 +14,9 @@ from .. import Artemis, config
 
 if TYPE_CHECKING:
     from .prompts import Prompts
+
+
+log = logging.getLogger(__name__)
 
 
 class SubmissionStatus(enum.Enum):
@@ -191,6 +195,8 @@ class Queue(commands.Cog):
         if approved >= config.event_role_requirement:
             await member.add_roles(discord.Object(config.event_role_id), reason='Event participation')
 
+        await self.update_statistics_file()
+
     async def reject_submission(self, submission_id: int):
         submission = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
 
@@ -230,6 +236,45 @@ class Queue(commands.Cog):
             )
 
         return record
+
+    async def update_statistics_file(self):
+        assert self.bot.pool is not None
+        assert self.bot.session is not None
+
+        async with self.bot.pool.acquire() as conn:
+            records = await conn.fetch(
+                """
+                SELECT user_id, ARRAY_AGG(prompt_idx) approved_submissions
+                FROM submissions
+                WHERE status = 'approved'
+                GROUP BY user_id
+                """
+            )
+
+        data = []
+
+        for record in records:
+            user = self.bot.get_user(record['user_id'])
+
+            if user is None:
+                continue
+
+            data.append(
+                {
+                    'id': str(user.id),
+                    'name': user.name,
+                    'discriminator': user.discriminator,
+                    'approved_submissions': record['approved_submissions'],
+                }
+            )
+
+        headers = {
+            'Authorization': config.statistics_authorization,
+        }
+
+        async with self.bot.session.put(config.statistics_endpoint, headers=headers, json=data) as resp:
+            text = await resp.text()
+            log.info(f'Updated statistics: {resp.status} - {text}.')
 
 
 def setup(bot: Artemis):
