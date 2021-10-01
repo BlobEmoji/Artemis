@@ -264,6 +264,7 @@ class Queue(commands.Cog):
                     'id': str(user.id),
                     'name': user.name,
                     'discriminator': user.discriminator,
+                    'avatar': user.avatar and user.avatar.key,
                     'approved_submissions': record['approved_submissions'],
                 }
             )
