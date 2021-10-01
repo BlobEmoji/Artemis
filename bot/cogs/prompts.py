@@ -38,7 +38,7 @@ class Prompts(commands.Cog):
 
     @property
     def during_event(self):
-        return config.start_day < datetime.datetime.now().date() < config.end_day
+        return config.start_day <= datetime.datetime.now().date() <= config.end_day
 
     @property
     def after_event(self):
