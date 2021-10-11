@@ -8,7 +8,7 @@ from .. import Artemis, config
 info_message_format = f"""
 Welcome to {config.event_name} {config.start_day.year}!
 
-In this event, 2 prompts are revealed every {config.days_per_prompt} days, and you can submit artwork that corresponds with the given prompt to get it displayed in a gallery channel!
+In this event, a pair of prompts are revealed every {config.days_per_prompt} days, and you may either pick ony one of them or mix them together in order to make an artwork of it. You can submit it here in order to get it displayed in the gallery channel! Each submission counts as one ticket for a raffle that will be done later.
 
 """
 
@@ -46,11 +46,11 @@ class Prompts(commands.Cog):
 
     def get_topic(self):
         if self.before_event:
-            prompt_message = f'Event starts on {config.start_day}'
+            prompt_message = f'Event starts on {config.start_day}.'
         elif self.during_event:
-            prompt_message = f'Current Prompt: {self.current_prompt} ({self.current_prompt_number})'
+            prompt_message = f'Current Prompt: {self.current_prompt} (#{self.current_prompt_number + 1}).'
         else:
-            prompt_message = 'The event has ended'
+            prompt_message = 'The event has ended. Thanks for participating!'
 
         return f'{prompt_message}\nCheck pins for more info.'
 
@@ -66,10 +66,10 @@ class Prompts(commands.Cog):
         elif self.during_event:
             info_message += f'The current prompt is {config.prompts[self.current_prompt_number]}!\n\n'
         else:
-            info_message += f'The event has ended.\n\n'
+            info_message += f'The event has ended. Thanks for participating!\n\n'
 
         if past_prompts:
-            info_message += f'Previous  Prompts:\n{past_prompts}'
+            info_message += f'Previous Prompts:\n{past_prompts}'
 
         return info_message
 
