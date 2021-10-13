@@ -56,7 +56,7 @@ class Tasks(commands.Cog):
             await prompt_message.edit(content=config.prompts_image_links[prompts.current_day])
 
         if self.new_day.current_loop != 0:
-            await submission_channel.send(f"It's a new day! The current prompt is {prompts.current_prompt}")
+            await submission_channel.send(f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_number + 1})")
 
 
 def setup(bot):
