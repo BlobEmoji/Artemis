@@ -166,7 +166,7 @@ class Queue(commands.Cog):
         prompt_idx = record['prompt_idx']
         prompt = config.prompts[prompt_idx]
 
-        embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx})')
+        embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx + 1})')
 
         embed.color = config.embed_color
         embed.set_image(url=record['image_url'])
