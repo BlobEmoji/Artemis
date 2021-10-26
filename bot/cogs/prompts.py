@@ -1,4 +1,6 @@
 import datetime
+import math
+import time
 
 from discord.ext import commands
 
@@ -33,6 +35,12 @@ class Prompts(commands.Cog):
         return self.current_day // config.days_per_prompt
 
     @property
+    def current_prompt_timestamp(self):
+        end_timestamp = math.floor(time.mktime(config.end_day.timetuple()))
+        prompt_timestamp = math.floor(time.mktime(config.start_day.timetuple())) + ((86400 * config.days_per_prompt) * (self.current_prompt_number + 1))
+        return min(prompt_timestamp, end_timestamp)
+
+    @property
     def before_event(self):
         return datetime.datetime.now().date() < config.start_day
 
@@ -49,6 +57,7 @@ class Prompts(commands.Cog):
             prompt_message = f'Event starts on {config.start_day}.'
         elif self.during_event:
             prompt_message = f'Current Prompt: {self.current_prompt} (#{self.current_prompt_number + 1}).'
+            prompt_message += f'\nThe deadline is <t:{self.current_prompt_timestamp}>\n\n'
         else:
             prompt_message = 'The event has ended. Thanks for participating!'
 
@@ -64,7 +73,8 @@ class Prompts(commands.Cog):
         if self.before_event:
             info_message += f'The event starts on {config.start_day}! Come back then!\n\n'
         elif self.during_event:
-            info_message += f'The current prompt is {config.prompts[self.current_prompt_number]}!\n\n'
+            info_message += f'The current prompt is {config.prompts[self.current_prompt_number]}!\n'
+            info_message += f'The deadline is <t:{self.current_prompt_timestamp}>\n\n'
         else:
             info_message += f'The event has ended. Thanks for participating!\n\n'
 
