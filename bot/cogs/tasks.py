@@ -59,5 +59,5 @@ class Tasks(commands.Cog):
             await submission_channel.send(f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_number + 1})")
 
 
-def setup(bot):
-    bot.add_cog(Tasks(bot))
+async def setup(bot):
+    await bot.add_cog(Tasks(bot))

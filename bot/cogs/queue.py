@@ -28,7 +28,7 @@ class SubmissionStatus(enum.Enum):
 
 def wrap_interface_button(f):
     @functools.wraps(f)
-    async def wrapper(self: QueueInterface, button: discord.ui.Button, interaction: discord.Interaction):
+    async def wrapper(self: QueueInterface, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
 
         assert self.cog.bot.pool is not None
@@ -278,5 +278,5 @@ class Queue(commands.Cog):
             log.info(f'Updated statistics: {resp.status} - {text}.')
 
 
-def setup(bot: Artemis):
-    bot.add_cog(Queue(bot))
+async def setup(bot: Artemis):
+    await bot.add_cog(Queue(bot))

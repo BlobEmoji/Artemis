@@ -11,7 +11,7 @@ from .config import token
 
 class Artemis(commands.Bot):
     def __init__(self):
-        intents = discord.Intents(guilds=True, members=True, guild_messages=True)
+        intents = discord.Intents(guilds=True, members=True, guild_messages=True, message_content=True)
         super().__init__(command_prefix='f!', intents=intents)
 
         self.pool: Optional[asyncpg.Pool] = None
@@ -29,7 +29,7 @@ class Artemis(commands.Bot):
         cogs = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts']
 
         for cog in cogs:
-            self.load_extension(cog)
+            await self.load_extension(cog)
 
         return await super().start(*args, **kwargs)
 

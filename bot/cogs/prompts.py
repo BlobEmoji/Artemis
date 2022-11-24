@@ -84,5 +84,5 @@ class Prompts(commands.Cog):
         return info_message
 
 
-def setup(bot):
-    return bot.add_cog(Prompts(bot))
+async def setup(bot):
+    await bot.add_cog(Prompts(bot))
