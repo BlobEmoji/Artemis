@@ -241,6 +241,10 @@ class Queue(commands.Cog):
         assert self.bot.pool is not None
         assert self.bot.session is not None
 
+        if config.statistics_endpoint is None:
+            logging.warn('No statistics endpoint was configured, skipping.')
+            return
+
         async with self.bot.pool.acquire() as conn:
             records = await conn.fetch(
                 """

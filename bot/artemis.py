@@ -21,8 +21,6 @@ class Artemis(commands.Bot):
         super().run(token)
 
     async def start(self, *args, **kwargs):
-        await asyncio.sleep(1)
-
         self.pool = await asyncpg.create_pool(user="postgres", host="db")
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 

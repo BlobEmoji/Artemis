@@ -4,6 +4,8 @@ services:
   bot:
     build: .
     command: python run.py
+    depends_on:
+      - db
     volumes:
       - ./:/opt/artemis
     environment:
