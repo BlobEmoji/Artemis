@@ -1,6 +1,3 @@
-import asyncio
-from typing import Optional
-
 import aiohttp
 import asyncpg
 import discord
@@ -14,8 +11,8 @@ class Artemis(commands.Bot):
         intents = discord.Intents(guilds=True, members=True, guild_messages=True, message_content=True)
         super().__init__(command_prefix='f!', intents=intents)
 
-        self.pool: Optional[asyncpg.Pool] = None
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.pool: asyncpg.Pool = discord.utils.MISSING
+        self.session: aiohttp.ClientSession = discord.utils.MISSING
 
     def run(self):
         super().run(token)
@@ -24,7 +21,7 @@ class Artemis(commands.Bot):
         self.pool = await asyncpg.create_pool(user="postgres", host="db")
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 
-        cogs = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts']
+        cogs = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts', 'bot.cogs.information']
 
         for cog in cogs:
             await self.load_extension(cog)
