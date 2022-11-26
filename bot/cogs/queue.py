@@ -4,7 +4,7 @@ import enum
 import functools
 import logging
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from discord.ext import commands
@@ -35,7 +35,7 @@ def wrap_interface_button(f):
         assert interaction.message is not None
 
         async with self.cog.bot.pool.acquire() as conn:
-            submission_id = await conn.fetchval(
+            submission_id: int = await conn.fetchval(
                 'SELECT id FROM submissions WHERE queue_message_id = $1', interaction.message.id
             )
 
@@ -49,79 +49,78 @@ class QueueInterface(discord.ui.View):
     def __init__(self, cog: Queue):
         super().__init__(timeout=None)
 
-        self.cog = cog
+        self.cog: Queue = cog
 
     @discord.ui.button(label='Approve', custom_id='approve', style=discord.ButtonStyle.green)  # type: ignore
     @wrap_interface_button
-    async def approve(self, submission_id: int):
+    async def approve(self, submission_id: int) -> None:
         await self.cog.approve_submission(submission_id)
 
     @discord.ui.button(label='Reject', custom_id='reject', style=discord.ButtonStyle.red)  # type: ignore
     @wrap_interface_button
-    async def reject(self, submission_id: int):
+    async def reject(self, submission_id: int) -> None:
         await self.cog.reject_submission(submission_id)
 
     @discord.ui.button(label='Dismiss', custom_id='dismiss', style=discord.ButtonStyle.gray)  # type: ignore
     @wrap_interface_button
-    async def dismiss(self, submission_id: int):
+    async def dismiss(self, submission_id: int) -> None:
         await self.cog.dismiss_submission(submission_id)
 
 
 class Queue(commands.Cog):
-    def __init__(self, bot: Artemis):
-        self.bot = bot
+    def __init__(self, bot: Artemis) -> None:
+        self.bot: Artemis = bot
 
-        view = QueueInterface(self)
+        view: QueueInterface = QueueInterface(self)
         bot.loop.call_later(0, bot.add_view, view)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
         if config.submission_channel_id == message.channel.id:
             await self._process_message(message)
 
     @commands.Cog.listener()
-    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
+    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent) -> None:
         if payload.channel_id != config.submission_channel_id:
             return
 
-        channel = self.bot.get_channel(config.submission_channel_id)
+        channel: discord.TextChannel | Any = self.bot.get_channel(config.submission_channel_id)
 
         if TYPE_CHECKING:
             assert isinstance(channel, discord.TextChannel)
 
         try:
-            message = await channel.fetch_message(payload.message_id)
+            message: discord.Message = await channel.fetch_message(payload.message_id)
         except discord.NotFound:
             return
 
         await self._process_message(message)
 
-    async def _process_message(self, message: discord.Message):
+    async def _process_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
-        urls = re.findall(r'(https?://\S+)', message.content)
-        attachment_urls = [a.url for a in message.attachments]
+        urls: list[str] = re.findall(r'(https?://\S+)', message.content)
+        attachment_urls: list[str] = [a.url for a in message.attachments]
 
         for url in urls + attachment_urls:
             await self._process_submission(message, url)
 
-    async def _process_submission(self, message: discord.Message, url: str):
+    async def _process_submission(self, message: discord.Message, url: str) -> None:
         assert self.bot.pool is not None
 
-        channel = self.bot.get_channel(config.queue_channel_id)
-        prompts: Optional[Prompts] = self.bot.get_cog('Prompts')  # type: ignore
+        queue_channel: discord.TextChannel | Any = self.bot.get_channel(config.queue_channel_id)
+        if not isinstance(queue_channel, discord.TextChannel):
+            raise RuntimeError(f'The submission channel configured is of {type(queue_channel)} type, not TextChannel!')
 
-        if prompts is None:
+        prompts: Prompts | commands.Cog | None = self.bot.get_cog('Prompts')
+        if not isinstance(prompts, Prompts):
             return
 
         if prompts.current_prompt is None:
             return
 
-        if TYPE_CHECKING:
-            assert isinstance(channel, discord.TextChannel)
-
-        prompt = await channel.send(
+        prompt: discord.Message = await queue_channel.send(
             f'**{prompts.current_prompt}** submission by **{message.author}** {message.author.mention}\n\n{url}',
             view=QueueInterface(self),
         )
@@ -140,11 +139,9 @@ class Queue(commands.Cog):
                 prompt.id,
             )
 
-    async def approve_submission(self, submission_id: int):
-        assert self.bot.pool is not None
-
+    async def approve_submission(self, submission_id: int) -> None:
         async with self.bot.pool.acquire() as conn:
-            record = await conn.fetchrow(
+            record: dict = await conn.fetchrow(
                 """
                 SELECT user_id, image_url, prompt_idx
                 FROM submissions
@@ -153,32 +150,30 @@ class Queue(commands.Cog):
                 submission_id,
             )
 
-        guild = self.bot.get_guild(config.event_guild_id)
-
+        guild: discord.Guild | None = self.bot.get_guild(config.event_guild_id)
         if guild is None:
-            return
+            raise RuntimeError('The guild ID given in the config is invalid!')
 
-        member = guild.get_member(record['user_id'])
-
+        member: discord.Member | None = guild.get_member(record['user_id'])
         if member is None:
             return
 
-        prompt_idx = record['prompt_idx']
-        prompt = config.prompts[prompt_idx]
+        prompt_idx: int = record['prompt_idx']
+        prompt: str = config.prompts[prompt_idx]
 
-        embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx + 1})')
+        embed: discord.Embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx + 1})')
 
         embed.color = config.embed_color
         embed.set_image(url=record['image_url'])
 
         embed.set_author(name=str(member), icon_url=member.display_avatar.url)
 
-        channel = self.bot.get_channel(config.gallery_channel_id)
+        channel: discord.TextChannel | Any = self.bot.get_channel(config.gallery_channel_id)
 
         if TYPE_CHECKING:
             assert isinstance(channel, discord.TextChannel)
 
-        message = await channel.send(embed=embed)
+        message: discord.Message = await channel.send(embed=embed)
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute(
@@ -197,8 +192,8 @@ class Queue(commands.Cog):
 
         await self.update_statistics_file()
 
-    async def reject_submission(self, submission_id: int):
-        submission = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
+    async def reject_submission(self, submission_id: int) -> None:
+        submission: dict = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
 
         user = self.bot.get_user(submission['user_id'])
 
@@ -220,11 +215,11 @@ class Queue(commands.Cog):
     async def dismiss_submission(self, submission_id: int):
         await self._update_submission_status(submission_id, SubmissionStatus.DISMISSED)
 
-    async def _update_submission_status(self, submission_id: int, status: SubmissionStatus):
+    async def _update_submission_status(self, submission_id: int, status: SubmissionStatus) -> dict:
         assert self.bot.pool is not None
 
         async with self.bot.pool.acquire() as conn:
-            record = await conn.fetchrow(
+            record: dict = await conn.fetchrow(
                 """
                 UPDATE submissions
                 SET status = $2
@@ -237,7 +232,7 @@ class Queue(commands.Cog):
 
         return record
 
-    async def update_statistics_file(self):
+    async def update_statistics_file(self) -> None:
         assert self.bot.pool is not None
         assert self.bot.session is not None
 
@@ -246,7 +241,7 @@ class Queue(commands.Cog):
             return
 
         async with self.bot.pool.acquire() as conn:
-            records = await conn.fetch(
+            records: list[dict] = await conn.fetch(
                 """
                 SELECT user_id, ARRAY_AGG(prompt_idx) approved_submissions
                 FROM submissions
@@ -255,10 +250,10 @@ class Queue(commands.Cog):
                 """
             )
 
-        data = []
+        data: list[dict] = []
 
         for record in records:
-            user = self.bot.get_user(record['user_id'])
+            user: discord.User | None = self.bot.get_user(record['user_id'])
 
             if user is None:
                 continue
@@ -273,12 +268,12 @@ class Queue(commands.Cog):
                 }
             )
 
-        headers = {
+        headers: dict = {
             'Authorization': config.statistics_authorization,
         }
 
         async with self.bot.session.put(config.statistics_endpoint, headers=headers, json=data) as resp:
-            text = await resp.text()
+            text: str = await resp.text()
             log.info(f'Updated statistics: {resp.status} - {text}.')
 
 

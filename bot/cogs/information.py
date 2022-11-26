@@ -20,7 +20,6 @@ class Information(commands.Cog):
             user = interaction.user
 
         prompts: Prompts | commands.Cog | None = self.bot.get_cog('Prompts')
-
         if not isinstance(prompts, Prompts):
             return
 
