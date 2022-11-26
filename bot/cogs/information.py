@@ -1,6 +1,4 @@
 import io
-import logging
-from typing import TYPE_CHECKING, Optional
 
 import asyncpg
 import discord
@@ -13,11 +11,11 @@ from .. import Artemis, config
 
 
 class Information(commands.Cog):
-    def __init__(self, bot: Artemis):
-        self.bot = bot
+    def __init__(self, bot: Artemis) -> None:
+        self.bot: Artemis = bot
 
     @app_commands.command()
-    async def card(self, interaction: discord.Interaction, user: discord.User | discord.Member | None = None):
+    async def card(self, interaction: discord.Interaction, user: discord.User | discord.Member | None = None) -> None:
         if user is None:
             user = interaction.user
 
@@ -37,7 +35,7 @@ class Information(commands.Cog):
                 prompts.current_prompt_number,
             )
 
-        card = discord.Embed(
+        card: discord.Embed = discord.Embed(
             title=f"{user.name}'s {config.event_name} stats",
             description=f"{approved}/{len(config.prompts)}",
             color=config.embed_color,
@@ -49,33 +47,32 @@ class Information(commands.Cog):
 
             card.add_field(name='Current prompt progress', value=latest_status)
 
-        avatar_url = user.display_avatar.with_static_format('png').url
-        avatar_ext = 'gif' if user.display_avatar.is_animated() else 'png'
+        avatar_url: str = user.display_avatar.with_static_format('png').url
+        avatar_ext: str = 'gif' if user.display_avatar.is_animated() else 'png'
 
         if interaction.guild is None:
             return
 
         # Send as attachment if possible, as URLs expire
-        file: Optional[discord.File] = None
-        link = None
+        file: discord.File = discord.utils.MISSING
 
         async with self.bot.session.get(avatar_url) as resp:
-            size = int(resp.headers['Content-Length'])
+            size: int = int(resp.headers['Content-Length'])
+            link: str
 
             if size <= interaction.guild.filesize_limit:
-                file_name = 'avatar.' + avatar_ext
+                file_name: str = 'avatar.' + avatar_ext
                 link = f'attachment://{file_name}'
 
-                data = io.BytesIO(await resp.read())
-                file = discord.File(data, file_name)
-
-        if file is None:
-            link = avatar_url
+                data: io.BytesIO = io.BytesIO(await resp.read())
+                file: discord.File = discord.File(data, file_name)
+            else:
+                link = avatar_url
 
         card.set_thumbnail(url=link)
 
         await interaction.response.send_message(embed=card, ephemeral=user != interaction.user, file=file)
 
 
-async def setup(bot: Artemis):
+async def setup(bot: Artemis) -> None:
     await bot.add_cog(Information(bot))
