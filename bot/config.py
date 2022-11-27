@@ -40,5 +40,4 @@ prompts: list[str] = data['prompts']
 prompts_image_links: list[str] = data['prompts_image_links']
 
 # Statistics endpoint
-statistics_endpoint: str | None = data['statistics_endpoint']
 statistics_authorization: str | None = data['statistics_authorization']

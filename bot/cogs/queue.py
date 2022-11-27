@@ -30,12 +30,11 @@ class UserData(TypedDict):
     username: str
     discriminator: str
 
-    avatar: str
+    avatar: str | None
 
 
 class SubmissionInfo(TypedDict):
     prompt_id: int
-
     image_url: str
 
 
@@ -257,17 +256,21 @@ class Queue(commands.Cog):
             log.info(f'Updated statistics: {resp.status} - {text}.')
 
     async def update_user_statistics(self, user: discord.Member) -> None:
-        if config.statistics_endpoint is None:
+        if config.statistics_authorization is None:
             return
 
-        link: str = f'{config.statistics_endpoint}/v1/users/{user.id}'
+        link: str = f'https://api.blobs.gg/v1/users/{user.id}'
 
-        data: UserData = {"username": user.name, "discriminator": user.discriminator, "avatar": user.display_avatar.key}
+        data: UserData = {
+            "username": user.name,
+            "discriminator": user.discriminator,
+            "avatar": user.avatar and user.avatar.key, # type: ignore
+        }
 
         await self.post_statistics(link, data)
 
     async def update_submission_info(self, user: discord.Member) -> None:
-        if config.statistics_endpoint is None:
+        if config.statistics_authorization is None:
             return
 
         link: str = f'https://api.blobs.gg/v1/events/drawfest/{config.start_day.year}/submissions/{user.id}'
