@@ -4,7 +4,7 @@ import enum
 import functools
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypedDict
 
 import discord
 from discord.ext import commands
@@ -24,6 +24,19 @@ class SubmissionStatus(enum.Enum):
     APPROVED = 'approved'
     DENIED = 'denied'
     DISMISSED = 'dismissed'
+
+
+class UserData(TypedDict):
+    username: str
+    discriminator: str
+
+    avatar: str
+
+
+class SubmissionInfo(TypedDict):
+    prompt_id: int
+
+    image_url: str
 
 
 def wrap_interface_button(f):
@@ -114,8 +127,9 @@ class Queue(commands.Cog):
             raise RuntimeError(f'The submission channel configured is of {type(queue_channel)} type, not TextChannel!')
 
         prompts: Prompts | commands.Cog | None = self.bot.get_cog('Prompts')
-        if not isinstance(prompts, Prompts):
-            return
+        if TYPE_CHECKING:
+            if not isinstance(prompts, Prompts):
+                return
 
         if prompts.current_prompt is None:
             return
@@ -190,7 +204,8 @@ class Queue(commands.Cog):
         if approved >= config.event_role_requirement:
             await member.add_roles(discord.Object(config.event_role_id), reason='Event participation')
 
-        await self.update_statistics_file()
+        await self.update_user_statistics(member)
+        await self.update_submission_info(member)
 
     async def reject_submission(self, submission_id: int) -> None:
         submission: dict = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
@@ -200,7 +215,7 @@ class Queue(commands.Cog):
         if user is None:
             return
 
-        prompt = config.prompts[submission['prompt_idx']]
+        prompt: str = config.prompts[submission['prompt_idx']]
 
         try:
             await user.send(
@@ -212,7 +227,7 @@ class Queue(commands.Cog):
         except discord.HTTPException:
             return
 
-    async def dismiss_submission(self, submission_id: int):
+    async def dismiss_submission(self, submission_id: int) -> None:
         await self._update_submission_status(submission_id, SubmissionStatus.DISMISSED)
 
     async def _update_submission_status(self, submission_id: int, status: SubmissionStatus) -> dict:
@@ -232,49 +247,42 @@ class Queue(commands.Cog):
 
         return record
 
-    async def update_statistics_file(self) -> None:
-        assert self.bot.pool is not None
-        assert self.bot.session is not None
-
-        if config.statistics_endpoint is None:
-            logging.warn('No statistics endpoint was configured, skipping.')
-            return
-
-        async with self.bot.pool.acquire() as conn:
-            records: list[dict] = await conn.fetch(
-                """
-                SELECT user_id, ARRAY_AGG(prompt_idx) approved_submissions
-                FROM submissions
-                WHERE status = 'approved'
-                GROUP BY user_id
-                """
-            )
-
-        data: list[dict] = []
-
-        for record in records:
-            user: discord.User | None = self.bot.get_user(record['user_id'])
-
-            if user is None:
-                continue
-
-            data.append(
-                {
-                    'id': str(user.id),
-                    'name': user.name,
-                    'discriminator': user.discriminator,
-                    'avatar': user.avatar and user.avatar.key,
-                    'approved_submissions': record['approved_submissions'],
-                }
-            )
-
+    async def post_statistics(self, link: str, data: UserData | list[SubmissionInfo]) -> None:
         headers: dict = {
             'Authorization': config.statistics_authorization,
         }
 
-        async with self.bot.session.put(config.statistics_endpoint, headers=headers, json=data) as resp:
+        async with self.bot.session.post(link, headers=headers, json=data) as resp:
             text: str = await resp.text()
             log.info(f'Updated statistics: {resp.status} - {text}.')
+
+    async def update_user_statistics(self, user: discord.Member) -> None:
+        if config.statistics_endpoint is None:
+            return
+
+        link: str = f'{config.statistics_endpoint}/v1/users/{user.id}'
+
+        data: UserData = {"username": user.name, "discriminator": user.discriminator, "avatar": user.display_avatar.key}
+
+        await self.post_statistics(link, data)
+
+    async def update_submission_info(self, user: discord.Member) -> None:
+        if config.statistics_endpoint is None:
+            return
+
+        link: str = f'https://api.blobs.gg/v1/events/drawfest/{config.start_day.year}/submissions/{user.id}'
+
+        data: list[SubmissionInfo] = []
+
+        async with self.bot.pool.acquire() as conn:
+            approved: list[dict] = await conn.fetch(
+                'SELECT image_url, prompt_idx FROM submissions WHERE user_id = $1 AND status = \'approved\'', user.id
+            )
+
+        for record in approved:
+            data.append({'prompt_id': record['prompt_idx'], 'image_url': record['image_url']})
+
+        await self.post_statistics(link, data)
 
 
 async def setup(bot: Artemis):
