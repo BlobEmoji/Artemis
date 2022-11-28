@@ -30,9 +30,7 @@ class Tasks(commands.Cog):
                 f'The submission channel configured is of {type(submission_channel)} type, not TextChannel! Aborting task!'
             )
 
-        prompts: Prompts | commands.Cog | None = self.bot.get_cog('Prompts')
-        if not isinstance(prompts, Prompts):
-            return
+        prompts: Prompts = self.bot.get_cog(Prompts)
 
         await submission_channel.edit(topic=prompts.get_topic())
 

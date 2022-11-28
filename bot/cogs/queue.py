@@ -132,10 +132,7 @@ class Queue(commands.Cog):
         if not isinstance(queue_channel, discord.TextChannel):
             raise RuntimeError(f'The submission channel configured is of {type(queue_channel)} type, not TextChannel!')
 
-        prompts: Prompts | commands.Cog | None = self.bot.get_cog('Prompts')
-        if TYPE_CHECKING:
-            if not isinstance(prompts, Prompts):
-                return
+        prompts: Prompts = self.bot.get_cog(Prompts)
 
         if prompts.current_prompt is None:
             return

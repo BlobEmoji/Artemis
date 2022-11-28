@@ -19,9 +19,7 @@ class Information(commands.Cog):
         if user is None:
             user = interaction.user
 
-        prompts: Prompts | commands.Cog | None = self.bot.get_cog('Prompts')
-        if not isinstance(prompts, Prompts):
-            return
+        prompts: Prompts = self.bot.get_cog(Prompts)
 
         async with self.bot.pool.acquire() as conn:
             approved: int = await conn.fetchval(

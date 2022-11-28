@@ -1,9 +1,14 @@
+import typing
+
 import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
 
 from .config import token
+
+
+T = typing.TypeVar('T', bound=commands.Cog)
 
 
 class Artemis(commands.Bot):
@@ -17,8 +22,16 @@ class Artemis(commands.Bot):
     def run(self) -> None:
         super().run(token)
 
+    def get_cog(self, cog_type: type[T]) -> T:
+        cog: cog_type | commands.Cog | None = super().get_cog(cog_type.__name__)
+
+        if not isinstance(cog, cog_type):
+            raise RuntimeError(f'Expected cog of type {cog_type}, got {type(cog)}')
+
+        return cog
+
     async def setup_hook(self) -> None:
-        self.pool = await asyncpg.create_pool(user="postgres", host="db")  # type: ignore
+        self.pool = await asyncpg.create_pool(user="postgres", host="db")
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 
         cogs: list[str] = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts', 'bot.cogs.information']
