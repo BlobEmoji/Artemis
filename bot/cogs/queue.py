@@ -88,7 +88,7 @@ class Queue(commands.Cog):
         self.bot: Artemis = bot
 
         view: QueueInterface = QueueInterface(self)
-        bot.loop.call_later(0, bot.add_view, view)
+        bot.add_view(view)
 
         self.lock = asyncio.Lock()
 
