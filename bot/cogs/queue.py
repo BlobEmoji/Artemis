@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import enum
 import functools
 import logging
@@ -79,12 +80,17 @@ class QueueInterface(discord.ui.View):
         await self.cog.dismiss_submission(submission_id)
 
 
+lock = asyncio.Lock()
+
+
 class Queue(commands.Cog):
     def __init__(self, bot: Artemis) -> None:
         self.bot: Artemis = bot
 
         view: QueueInterface = QueueInterface(self)
         bot.loop.call_later(0, bot.add_view, view)
+
+        self.lock = asyncio.Lock()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -116,7 +122,8 @@ class Queue(commands.Cog):
         attachment_urls: list[str] = [a.url for a in message.attachments]
 
         for url in urls + attachment_urls:
-            await self._process_submission(message, url)
+            async with self.lock:
+                await self._process_submission(message, url)
 
     async def _process_submission(self, message: discord.Message, url: str) -> None:
         assert self.bot.pool is not None
@@ -132,6 +139,21 @@ class Queue(commands.Cog):
 
         if prompts.current_prompt is None:
             return
+
+        async with self.bot.pool.acquire() as conn:
+            exists: bool = await conn.fetchval(
+                """
+                SELECT EXISTS(
+                    SELECT *
+                    FROM submissions
+                    WHERE image_url = $1
+                )
+                """,
+                url,
+            )
+
+            if exists:
+                return
 
         prompt: discord.Message = await queue_channel.send(
             f'**{prompts.current_prompt}** submission by **{message.author}** {message.author.mention}\n\n{url}',
@@ -264,7 +286,7 @@ class Queue(commands.Cog):
         data: UserData = {
             "username": user.name,
             "discriminator": user.discriminator,
-            "avatar": user.avatar and user.avatar.key, # type: ignore
+            "avatar": user.avatar and user.avatar.key,  # type: ignore
         }
 
         await self.post_statistics(link, data)
