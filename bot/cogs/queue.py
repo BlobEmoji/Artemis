@@ -80,9 +80,6 @@ class QueueInterface(discord.ui.View):
         await self.cog.dismiss_submission(submission_id)
 
 
-lock = asyncio.Lock()
-
-
 class Queue(commands.Cog):
     def __init__(self, bot: Artemis) -> None:
         self.bot: Artemis = bot
