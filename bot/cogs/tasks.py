@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from typing import Any
 
 import discord
 from discord.ext import commands, tasks
@@ -11,19 +12,20 @@ class Tasks(commands.Cog):
     def __init__(self, bot: Artemis) -> None:
         self.bot: Artemis = bot
 
-        self.new_day.start()
+        self.update_submission_channel.start()
+        self.announce_new_day.start()
         asyncio.create_task(self.run_first_iteration())
 
     def cog_unload(self) -> None:
-        self.new_day.cancel()
+        self.update_submission_channel.cancel()
 
     async def run_first_iteration(self) -> None:
         await self.bot.wait_until_ready()
 
-        await self.new_day()
+        await self.update_submission_channel()
 
     @tasks.loop(time=datetime.time(0, 0, 0, 0))
-    async def new_day(self) -> None:
+    async def update_submission_channel(self) -> None:
         from .prompts import Prompts
 
         guild: discord.Guild | None = self.bot.get_guild(config.event_guild_id)
@@ -53,12 +55,18 @@ class Tasks(commands.Cog):
         if prompt_message.author == self.bot.user:
             await prompt_message.edit(content=config.prompts_image_links[prompts.current_day])
 
-        if self.new_day.current_loop != 0:
-            await submission_channel.send(
-                f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_number + 1})"
-            )
+    @tasks.loop(time=datetime.time(0, 0, 0, 0))
+    async def announce_new_day(self) -> None:
+        from .prompts import Prompts
 
-    @new_day.before_loop
+        submission_channel: discord.PartialMessageable = self.bot.get_partial_messageable(config.submission_channel_id)
+        prompts: Prompts = self.bot.get_cog(Prompts)
+
+        await submission_channel.send(
+            f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_number + 1})"
+        )
+
+    @update_submission_channel.before_loop
     async def ensure_ready(self) -> None:
         await self.bot.wait_until_ready()
 
