@@ -13,10 +13,6 @@ from discord.ext import commands
 from .. import Artemis, config
 
 
-if TYPE_CHECKING:
-    from .prompts import Prompts
-
-
 log = logging.getLogger(__name__)
 
 
@@ -123,6 +119,8 @@ class Queue(commands.Cog):
                 await self._process_submission(message, url)
 
     async def _process_submission(self, message: discord.Message, url: str) -> None:
+        from .prompts import Prompts
+
         assert self.bot.pool is not None
 
         queue_channel: discord.TextChannel | Any = self.bot.get_channel(config.queue_channel_id)

@@ -31,7 +31,7 @@ class Artemis(commands.Bot):
         return cog
 
     async def setup_hook(self) -> None:
-        self.pool = await asyncpg.create_pool(user="postgres", host="db")
+        self.pool = await asyncpg.create_pool(user="postgres", host="db")  # type: ignore
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 
         cogs: list[str] = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts', 'bot.cogs.information']

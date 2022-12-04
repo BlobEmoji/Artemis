@@ -1,10 +1,10 @@
+import asyncio
 import datetime
 
 import discord
 from discord.ext import commands, tasks
 
 from .. import Artemis, config
-from .prompts import Prompts
 
 
 class Tasks(commands.Cog):
@@ -12,12 +12,20 @@ class Tasks(commands.Cog):
         self.bot: Artemis = bot
 
         self.new_day.start()
+        asyncio.create_task(self.run_first_iteration())
 
     def cog_unload(self) -> None:
         self.new_day.cancel()
 
+    async def run_first_iteration(self) -> None:
+        await self.bot.wait_until_ready()
+
+        await self.new_day()
+
     @tasks.loop(time=datetime.time(0, 0, 0, 0))
     async def new_day(self) -> None:
+        from .prompts import Prompts
+
         guild: discord.Guild | None = self.bot.get_guild(config.event_guild_id)
         if guild is None:
             raise RuntimeError('The guild ID given in the config is invalid!')

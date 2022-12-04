@@ -5,8 +5,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot.cogs.prompts import Prompts
-
 from .. import Artemis, config
 
 
@@ -16,6 +14,8 @@ class Information(commands.Cog):
 
     @app_commands.command()
     async def card(self, interaction: discord.Interaction, user: discord.User | discord.Member | None = None) -> None:
+        from .prompts import Prompts
+
         if user is None:
             user = interaction.user
 
