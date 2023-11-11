@@ -5,7 +5,7 @@ import enum
 import functools
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import discord
 from discord.ext import commands
@@ -40,7 +40,6 @@ def wrap_interface_button(f):
     async def wrapper(self: QueueInterface, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
 
-        assert self.cog.bot.pool is not None
         assert interaction.message is not None
 
         async with self.cog.bot.pool.acquire() as conn:
@@ -120,8 +119,6 @@ class Queue(commands.Cog):
 
     async def _process_submission(self, message: discord.Message, url: str) -> None:
         from .prompts import Prompts
-
-        assert self.bot.pool is not None
 
         queue_channel: discord.TextChannel | Any = self.bot.get_channel(config.queue_channel_id)
         if not isinstance(queue_channel, discord.TextChannel):
@@ -244,8 +241,6 @@ class Queue(commands.Cog):
         await self._update_submission_status(submission_id, SubmissionStatus.DISMISSED)
 
     async def _update_submission_status(self, submission_id: int, status: SubmissionStatus) -> dict:
-        assert self.bot.pool is not None
-
         async with self.bot.pool.acquire() as conn:
             record: dict = await conn.fetchrow(
                 """

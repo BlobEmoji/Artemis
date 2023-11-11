@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from typing import Any
 
 import discord
 from discord.ext import commands, tasks

@@ -1,11 +1,12 @@
 import datetime
 from typing import Any
 
-import ruamel.yaml
+from ruamel.yaml import YAML
 
 
-with open('config.yaml', encoding='utf-8') as file:
-    data: dict = ruamel.yaml.safe_load(file)
+with YAML(typ='safe', pure=True) as yaml:
+    with open('config.yaml', encoding='utf-8') as file:
+        data: dict = yaml.load(file)
 
 # Bot
 token: str = data['bot']['token']
