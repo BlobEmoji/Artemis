@@ -66,9 +66,7 @@ class Prompts(ArtemisCog):
         return f'{prompt_message}\nCheck pins for more info.'
 
     def get_info_message(self) -> str:
-        past_prompts: str = "\n".join(
-            f'{i+1}. {config.prompts[i]}' for i in range(self.current_prompt_number) if i < len(config.prompts)
-        )
+        past_prompts: str = "\n".join(f'{i+1}. {config.prompts[i]}' for i in range(self.current_prompt_number) if i < len(config.prompts))
 
         info_message: str = info_message_format
 

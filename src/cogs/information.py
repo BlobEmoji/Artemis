@@ -19,9 +19,7 @@ class Information(ArtemisCog):
         prompts: Prompts = self.bot.get_cog(Prompts)
 
         async with self.bot.pool.acquire() as conn:
-            approved: int = await conn.fetchval(
-                'SELECT COUNT(*) FROM submissions WHERE user_id = $1 AND status = \'approved\'', user.id
-            )
+            approved: int = await conn.fetchval('SELECT COUNT(*) FROM submissions WHERE user_id = $1 AND status = \'approved\'', user.id)
 
             latest_status: str = await conn.fetchval(
                 'SELECT status FROM submissions WHERE user_id = $1 AND prompt_idx = $2',

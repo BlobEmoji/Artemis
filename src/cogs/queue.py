@@ -44,9 +44,7 @@ def wrap_interface_button(f):
         assert interaction.message is not None
 
         async with self.cog.bot.pool.acquire() as conn:
-            submission_id: int = await conn.fetchval(
-                'SELECT id FROM submissions WHERE queue_message_id = $1', interaction.message.id
-            )
+            submission_id: int = await conn.fetchval('SELECT id FROM submissions WHERE queue_message_id = $1', interaction.message.id)
 
         await f(self, submission_id)
         await interaction.message.delete()
@@ -223,9 +221,7 @@ class Queue(ArtemisCog):
                 submission_id,
             )
 
-            approved = await conn.fetchval(
-                'SELECT COUNT(*) FROM submissions WHERE user_id = $1 AND status = \'approved\'', member.id
-            )
+            approved = await conn.fetchval('SELECT COUNT(*) FROM submissions WHERE user_id = $1 AND status = \'approved\'', member.id)
 
         if approved >= config.event_role_requirement:
             await member.add_roles(discord.Object(config.event_role_id), reason='Event participation')

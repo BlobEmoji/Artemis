@@ -38,11 +38,11 @@ class Artemis(commands.Bot):
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 
         cogs: list[str] = [
-            'bot.cogs.file_utils',
-            'bot.cogs.information',
-            'bot.cogs.prompts',
-            'bot.cogs.queue',
-            'bot.cogs.tasks',
+            'src.cogs.file_utils',
+            'src.cogs.information',
+            'src.cogs.prompts',
+            'src.cogs.queue',
+            'src.cogs.tasks',
             'jishaku',
         ]
         for cog in cogs:
