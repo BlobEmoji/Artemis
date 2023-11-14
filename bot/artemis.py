@@ -34,10 +34,17 @@ class Artemis(commands.Bot):
         return cog
 
     async def setup_hook(self) -> None:
-        self.pool = await asyncpg.create_pool(user="postgres", host="db") # type: ignore # This function is not properly typed in asyncpg, but does work properly. 
+        self.pool = await asyncpg.create_pool(user='postgres', host='db')  # type: ignore # This function is not properly typed in asyncpg, but does work properly.
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 
-        cogs: list[str] = ['jishaku', 'bot.cogs.queue', 'bot.cogs.tasks', 'bot.cogs.prompts', 'bot.cogs.information']
+        cogs: list[str] = [
+            'bot.cogs.file_utils',
+            'bot.cogs.information',
+            'bot.cogs.prompts',
+            'bot.cogs.queue',
+            'bot.cogs.tasks',
+            'jishaku',
+        ]
         for cog in cogs:
             await self.load_extension(cog)
 
@@ -45,3 +52,14 @@ class Artemis(commands.Bot):
         await self.session.close()
 
         await super().close()
+
+
+class ArtemisCog(commands.Cog):
+    bot: Artemis
+
+    def __init__(self, bot: Artemis):
+        self.bot = bot
+
+    @classmethod
+    async def setup(cls, bot: Artemis) -> None:
+        await bot.add_cog(cls(bot))

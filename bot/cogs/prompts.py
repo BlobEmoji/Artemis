@@ -2,9 +2,10 @@ import datetime
 import math
 import time
 
+from asyncpg.exceptions import BranchTransactionAlreadyActiveError
 from discord.ext import commands
 
-from .. import Artemis, config
+from .. import ArtemisCog, config
 
 
 info_message_format: str = f"""
@@ -15,10 +16,7 @@ In this event, a pair of prompts are revealed every {config.days_per_prompt} day
 """
 
 
-class Prompts(commands.Cog):
-    def __init__(self, bot: Artemis):
-        self.bot: Artemis = bot
-
+class Prompts(ArtemisCog):
     @property
     def current_day(self) -> int:
         return (datetime.datetime.now().date() - config.start_day).days
@@ -88,5 +86,4 @@ class Prompts(commands.Cog):
         return info_message
 
 
-async def setup(bot: Artemis):
-    await bot.add_cog(Prompts(bot))
+setup = Prompts.setup

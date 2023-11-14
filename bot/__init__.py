@@ -1,2 +1,2 @@
-from .artemis import Artemis
+from .artemis import Artemis, ArtemisCog
 from .logging import setup_logging

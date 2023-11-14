@@ -4,12 +4,12 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 
-from .. import Artemis, config
+from .. import Artemis, ArtemisCog, config
 
 
-class Tasks(commands.Cog):
+class Tasks(ArtemisCog):
     def __init__(self, bot: Artemis) -> None:
-        self.bot: Artemis = bot
+        super().__init__(bot)
 
         self.update_submission_channel.start()
         self.announce_new_day.start()
@@ -70,5 +70,4 @@ class Tasks(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot: Artemis) -> None:
-    await bot.add_cog(Tasks(bot))
+setup = Tasks.setup

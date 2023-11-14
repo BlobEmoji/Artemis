@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING, Any, TypedDict
 import discord
 from discord.ext import commands
 
-from .. import Artemis, config
+from .. import Artemis, ArtemisCog, config
+from .file_utils import FileUtils
 
 
 log = logging.getLogger(__name__)
@@ -75,11 +76,14 @@ class QueueInterface(discord.ui.View):
         await self.cog.dismiss_submission(submission_id)
 
 
-class Queue(commands.Cog):
-    def __init__(self, bot: Artemis) -> None:
-        self.bot: Artemis = bot
+class Queue(ArtemisCog):
+    view: QueueInterface
+    lock: asyncio.Lock
 
-        view: QueueInterface = QueueInterface(self)
+    def __init__(self, bot: Artemis) -> None:
+        super().__init__(bot)
+
+        view = QueueInterface(self)
         bot.add_view(view)
 
         self.lock = asyncio.Lock()
@@ -185,19 +189,31 @@ class Queue(commands.Cog):
         prompt_idx: int = record['prompt_idx']
         prompt: str = config.prompts[prompt_idx]
 
-        embed: discord.Embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx + 1})')
+        embed: discord.Embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx + 1})', color=config.embed_color)
 
-        embed.color = config.embed_color
-        embed.set_image(url=record['image_url'])
+        file_utils = self.bot.get_cog(FileUtils)
 
-        embed.set_author(name=str(member), icon_url=member.display_avatar.url)
+        artwork_url: str = record['image_url']
+        artwork: discord.File
+
+        artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], guild)
+        embed.set_image(url=artwork_url)
+
+        avatar_url: str = member.display_avatar.with_static_format('png').url
+        avatar: discord.File
+
+        avatar_url, avatar = await file_utils.attempt_reupload('avatar', avatar_url, guild)
+
+        embed.set_author(name=str(member), icon_url=avatar_url)
 
         channel: discord.TextChannel | Any = self.bot.get_channel(config.gallery_channel_id)
 
         if TYPE_CHECKING:
             assert isinstance(channel, discord.TextChannel)
 
-        message: discord.Message = await channel.send(embed=embed)
+        message: discord.Message = await channel.send(
+            embed=embed, files=[file for file in (artwork, avatar) if file is not discord.utils.MISSING]
+        )
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute(
@@ -297,5 +313,4 @@ class Queue(commands.Cog):
         await self.post_statistics(link, data)
 
 
-async def setup(bot: Artemis):
-    await bot.add_cog(Queue(bot))
+setup = Queue.setup
