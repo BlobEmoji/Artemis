@@ -195,7 +195,6 @@ class Queue(ArtemisCog):
         artwork: discord.File
 
         artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], guild)
-        embed.set_image(url=artwork_url)
 
         avatar_url: str = member.display_avatar.with_static_format('png').url
         avatar: discord.File
@@ -209,8 +208,13 @@ class Queue(ArtemisCog):
         if TYPE_CHECKING:
             assert isinstance(channel, discord.TextChannel)
 
+        content: str = ''
+
+        if artwork is discord.utils.MISSING:
+            content += f'\n{artwork_url}'
+
         message: discord.Message = await channel.send(
-            embed=embed, files=[file for file in (artwork, avatar) if file is not discord.utils.MISSING]
+            content, embed=embed, files=[file for file in (artwork, avatar) if file is not discord.utils.MISSING]
         )
 
         async with self.bot.pool.acquire() as conn:
