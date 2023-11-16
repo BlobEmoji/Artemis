@@ -1,7 +1,11 @@
 import datetime
-from typing import Any
+from typing import Any, TypeVar
 
+import discord
+from discord.ext import commands
 from ruamel.yaml import YAML
+
+from .errors import ConfiguredResourceNotFound
 
 
 with YAML(typ='safe', pure=True) as yaml:
@@ -42,3 +46,34 @@ prompts_image_links: list[str] = data['prompts_image_links']
 
 # Statistics endpoint
 statistics_authorization: str | None = data['statistics_authorization']
+
+
+class EventBot(commands.Bot):
+    def __get_text_channel(self, field_name: str, channel_id: int) -> discord.TextChannel:
+        channel = self.get_channel(channel_id)
+
+        if not isinstance(channel, discord.TextChannel):
+            raise ConfiguredResourceNotFound(field_name, channel_id)
+
+        return channel
+
+    @property
+    def event_guild(self) -> discord.Guild:
+        guild: discord.Guild | None = self.get_guild(event_guild_id)
+
+        if guild is None:
+            raise ConfiguredResourceNotFound('event_guild_id', event_guild_id)
+
+        return guild
+
+    @property
+    def queue_channel(self) -> discord.TextChannel:
+        return self.__get_text_channel('queue_channel', queue_channel_id)
+
+    @property
+    def submission_channel(self) -> discord.TextChannel:
+        return self.__get_text_channel('submission_channel', submission_channel_id)
+
+    @property
+    def gallery_channel(self) -> discord.TextChannel:
+        return self.__get_text_channel('gallery_channel', gallery_channel_id)

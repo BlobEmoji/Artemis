@@ -88,7 +88,7 @@ class Queue(ArtemisCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if config.submission_channel_id == message.channel.id:
+        if self.bot.submission_channel == message.channel:
             await self._process_message(message)
 
     @commands.Cog.listener()
@@ -96,17 +96,9 @@ class Queue(ArtemisCog):
         if payload.channel_id != config.submission_channel_id:
             return
 
-        channel: discord.TextChannel | Any = self.bot.get_channel(config.submission_channel_id)
+        edited_message: discord.Message = await self.bot.submission_channel.fetch_message(payload.message_id)
 
-        if TYPE_CHECKING:
-            assert isinstance(channel, discord.TextChannel)
-
-        try:
-            message: discord.Message = await channel.fetch_message(payload.message_id)
-        except discord.NotFound:
-            return
-
-        await self._process_message(message)
+        await self._process_message(edited_message)
 
     async def _process_message(self, message: discord.Message) -> None:
         if message.author.bot:
@@ -121,10 +113,6 @@ class Queue(ArtemisCog):
 
     async def _process_submission(self, message: discord.Message, url: str) -> None:
         from .prompts import Prompts
-
-        queue_channel: discord.TextChannel | Any = self.bot.get_channel(config.queue_channel_id)
-        if not isinstance(queue_channel, discord.TextChannel):
-            raise RuntimeError(f'The submission channel configured is of {type(queue_channel)} type, not TextChannel!')
 
         prompts: Prompts = self.bot.get_cog(Prompts)
 
@@ -146,7 +134,7 @@ class Queue(ArtemisCog):
             if exists:
                 return
 
-        prompt: discord.Message = await queue_channel.send(
+        prompt: discord.Message = await self.bot.queue_channel.send(
             f'**{prompts.current_prompt}** submission by **{message.author}** {message.author.mention}\n\n{url}',
             view=QueueInterface(self),
         )
@@ -203,17 +191,12 @@ class Queue(ArtemisCog):
 
         embed.set_author(name=str(member), icon_url=avatar_url)
 
-        channel: discord.TextChannel | Any = self.bot.get_channel(config.gallery_channel_id)
-
-        if TYPE_CHECKING:
-            assert isinstance(channel, discord.TextChannel)
-
         content: str = ''
 
         if artwork is discord.utils.MISSING:
             content += f'\n{artwork_url}'
 
-        message: discord.Message = await channel.send(
+        message: discord.Message = await self.bot.gallery_channel.send(
             content, embed=embed, files=[file for file in (artwork, avatar) if file is not discord.utils.MISSING]
         )
 

@@ -5,13 +5,13 @@ import asyncpg
 import discord
 from discord.ext import commands
 
-from .config import token
+from .config import EventBot, token
 
 
 T = typing.TypeVar('T', bound=commands.Cog)
 
 
-class Artemis(commands.Bot):
+class Artemis(EventBot):
     pool: asyncpg.Pool
     session: aiohttp.ClientSession
 
