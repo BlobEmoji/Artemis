@@ -176,23 +176,22 @@ class Queue(ArtemisCog):
 
         artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], self.bot.event_guild)
 
-        plaque: Image.Image = create_plaque(member.name, config.prompts[prompt_idx], prompt_idx)
-        plaque_file: discord.File = file_utils.upload_image('plaque', plaque)
+        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_idx]}" (#{prompt_idx})'])
+        plaque = file_utils.upload_image('plaque', plaque)
 
         content: str = ''
 
         if artwork is discord.utils.MISSING:
             content += f'\n{artwork_url}'
 
-        message: discord.Message = await self.bot.gallery_channel.send(
-            content, files=[file for file in (artwork, plaque_file) if file is not discord.utils.MISSING]
-        )
+        art_message: discord.Message = await self.bot.gallery_channel.send(content, file=artwork)
+        plaque_message: discord.Message = await self.bot.gallery_channel.send(file=plaque)
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute(
                 'UPDATE submissions SET status = $1, gallery_message_id = $2 WHERE id = $3',
                 SubmissionStatus.APPROVED.value,
-                message.id,
+                art_message.id,
                 submission_id,
             )
 

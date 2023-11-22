@@ -1,4 +1,5 @@
 asyncpg==0.29.0
 discord.py[speed] @ git+https://github.com/Rapptz/discord.py@a5d03d4a1e6f4314518f6f55d8b7130ab3f4336e
 jishaku==2.5.2
+pillow==10.1.0
 ruamel.yaml==0.18.5
