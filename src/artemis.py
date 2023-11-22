@@ -8,7 +8,7 @@ from discord.ext import commands
 from .config import EventBot, token
 
 
-T = typing.TypeVar('T', bound=commands.Cog)
+C = typing.TypeVar('C', bound=commands.Cog)
 
 
 class Artemis(EventBot):
@@ -25,7 +25,7 @@ class Artemis(EventBot):
     def run(self) -> None:
         super().run(token)
 
-    def get_cog(self, cog_type: type[T]) -> T:
+    def get_cog(self, cog_type: type[C]) -> C:
         cog: cog_type | typing.Any = super().get_cog(cog_type.__name__)
 
         if not isinstance(cog, cog_type):

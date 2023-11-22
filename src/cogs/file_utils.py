@@ -3,6 +3,7 @@ import re
 
 import discord
 from discord.ext import commands
+from PIL import Image
 
 from .. import ArtemisCog
 from ..errors import FilesizeLimitException, NoExtensionFound
@@ -39,6 +40,13 @@ class FileUtils(ArtemisCog):
                 pass
 
         return (upload_url, file)
+
+    def upload_image(self, name: str, image: Image.Image) -> discord.File:
+        data: io.BytesIO = io.BytesIO()
+        image.save(data, format='png')
+        data.seek(0)
+
+        return discord.File(data, f'{name}.png')
 
 
 setup = FileUtils.setup

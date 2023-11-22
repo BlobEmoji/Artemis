@@ -9,8 +9,10 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 import discord
 from discord.ext import commands
+from PIL import Image
 
 from .. import Artemis, ArtemisCog, config
+from ..plaques import create_plaque
 from .file_utils import FileUtils
 
 
@@ -164,32 +166,18 @@ class Queue(ArtemisCog):
                 submission_id,
             )
 
-        guild: discord.Guild | None = self.bot.get_guild(config.event_guild_id)
-        if guild is None:
-            raise RuntimeError('The guild ID given in the config is invalid!')
-
-        member: discord.Member | None = guild.get_member(record['user_id'])
+        member: discord.Member | None = self.bot.event_guild.get_member(record['user_id'])
         if member is None:
             return
 
         prompt_idx: int = record['prompt_idx']
-        prompt: str = config.prompts[prompt_idx]
-
-        embed: discord.Embed = discord.Embed(title=f'{prompt} (Prompt #{prompt_idx + 1})', color=config.embed_color)
 
         file_utils = self.bot.get_cog(FileUtils)
 
-        artwork_url: str = record['image_url']
-        artwork: discord.File
+        artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], self.bot.event_guild)
 
-        artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], guild)
-
-        avatar_url: str = member.display_avatar.with_static_format('png').url
-        avatar: discord.File
-
-        avatar_url, avatar = await file_utils.attempt_reupload('avatar', avatar_url, guild)
-
-        embed.set_author(name=str(member), icon_url=avatar_url)
+        plaque: Image.Image = create_plaque(member.name, config.prompts[prompt_idx], prompt_idx)
+        plaque_file: discord.File = file_utils.upload_image('plaque', plaque)
 
         content: str = ''
 
@@ -197,7 +185,7 @@ class Queue(ArtemisCog):
             content += f'\n{artwork_url}'
 
         message: discord.Message = await self.bot.gallery_channel.send(
-            content, embed=embed, files=[file for file in (artwork, avatar) if file is not discord.utils.MISSING]
+            content, files=[file for file in (artwork, plaque_file) if file is not discord.utils.MISSING]
         )
 
         async with self.bot.pool.acquire() as conn:
