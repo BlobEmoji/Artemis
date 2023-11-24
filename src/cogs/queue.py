@@ -176,7 +176,7 @@ class Queue(ArtemisCog):
 
         artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], self.bot.event_guild)
 
-        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_idx]}" (#{prompt_idx})'])
+        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_idx]}" (#{prompt_idx})'], bold_lines=[0])
         plaque = file_utils.upload_image('plaque', plaque)
 
         content: str = ''
@@ -184,8 +184,8 @@ class Queue(ArtemisCog):
         if artwork is discord.utils.MISSING:
             content += f'\n{artwork_url}'
 
-        art_message: discord.Message = await self.bot.gallery_channel.send(content, file=artwork)
         plaque_message: discord.Message = await self.bot.gallery_channel.send(file=plaque)
+        art_message: discord.Message = await self.bot.gallery_channel.send(content, file=artwork)
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute(
