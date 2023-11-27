@@ -5,10 +5,11 @@ import enum
 import functools
 import logging
 import re
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, Self, TypedDict
 
 import discord
 from discord.ext import commands
+from discord.ui.item import ItemCallbackType
 from PIL import Image
 
 from .. import Artemis, ArtemisCog, config
@@ -38,7 +39,7 @@ class SubmissionInfo(TypedDict):
     image_url: str
 
 
-def wrap_interface_button(f):
+def wrap_interface_button(f) -> ItemCallbackType[QueueInterface, discord.ui.Button]:
     @functools.wraps(f)
     async def wrapper(self: QueueInterface, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
@@ -60,17 +61,17 @@ class QueueInterface(discord.ui.View):
 
         self.cog: Queue = cog
 
-    @discord.ui.button(label='Approve', custom_id='approve', style=discord.ButtonStyle.green)  # type: ignore
+    @discord.ui.button(label='Approve', custom_id='approve', style=discord.ButtonStyle.green)
     @wrap_interface_button
     async def approve(self, submission_id: int) -> None:
         await self.cog.approve_submission(submission_id)
 
-    @discord.ui.button(label='Reject', custom_id='reject', style=discord.ButtonStyle.red)  # type: ignore
+    @discord.ui.button(label='Reject', custom_id='reject', style=discord.ButtonStyle.red)
     @wrap_interface_button
     async def reject(self, submission_id: int) -> None:
         await self.cog.reject_submission(submission_id)
 
-    @discord.ui.button(label='Dismiss', custom_id='dismiss', style=discord.ButtonStyle.gray)  # type: ignore
+    @discord.ui.button(label='Dismiss', custom_id='dismiss', style=discord.ButtonStyle.gray)
     @wrap_interface_button
     async def dismiss(self, submission_id: int) -> None:
         await self.cog.dismiss_submission(submission_id)
@@ -144,7 +145,7 @@ class Queue(ArtemisCog):
         async with self.bot.pool.acquire() as conn:
             await conn.execute(
                 """
-                INSERT INTO submissions (user_id, image_url, prompt_idx, status, message_id, queue_message_id)
+                INSERT INTO submissions (user_id, image_url, prompt_id, status, message_id, queue_message_id)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 """,
                 message.author.id,
@@ -157,9 +158,9 @@ class Queue(ArtemisCog):
 
     async def approve_submission(self, submission_id: int) -> None:
         async with self.bot.pool.acquire() as conn:
-            record: dict = await conn.fetchrow(
+            record = await conn.fetchrow(
                 """
-                SELECT user_id, image_url, prompt_idx
+                SELECT user_id, image_url, prompt_id
                 FROM submissions
                 WHERE id = $1
                 """,
@@ -170,13 +171,13 @@ class Queue(ArtemisCog):
         if member is None:
             return
 
-        prompt_idx: int = record['prompt_idx']
+        prompt_id: int = record['prompt_id']
 
         file_utils = self.bot.get_cog(FileUtils)
 
         artwork_url, artwork = await file_utils.attempt_reupload('artwork', record['image_url'], self.bot.event_guild)
 
-        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_idx]}" (#{prompt_idx})'], bold_lines=[0])
+        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_id]}" (#{prompt_id})'], bold_lines=[0])
         plaque = file_utils.upload_image('plaque', plaque)
 
         content: str = ''
@@ -188,30 +189,35 @@ class Queue(ArtemisCog):
         art_message: discord.Message = await self.bot.gallery_channel.send(content, file=artwork)
 
         async with self.bot.pool.acquire() as conn:
-            await conn.execute(
-                'UPDATE submissions SET status = $1, gallery_message_id = $2 WHERE id = $3',
-                SubmissionStatus.APPROVED.value,
-                art_message.id,
-                submission_id,
+            await conn.execute('UPDATE submissions SET status = $1 WHERE id = $2', SubmissionStatus.APPROVED.value, submission_id)
+
+            for gallery_message in (plaque_message, art_message):
+                await conn.execute('INSERT INTO gallery (submission_id, message_id) VALUES ($1, $2)', submission_id, gallery_message.id)
+
+            approved_submissions: int = await conn.fetchval(
+                """
+                SELECT COUNT(*)
+                FROM submissions
+                WHERE user_id = $1 AND status = 'approved'
+                """,
+                member.id,
             )
 
-            approved = await conn.fetchval('SELECT COUNT(*) FROM submissions WHERE user_id = $1 AND status = \'approved\'', member.id)
-
-        if approved >= config.event_role_requirement:
+        if approved_submissions >= config.event_role_requirement:
             await member.add_roles(discord.Object(config.event_role_id), reason='Event participation')
 
         await self.update_user_statistics(member)
         await self.update_submission_info(member)
 
     async def reject_submission(self, submission_id: int) -> None:
-        submission: dict = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
+        submission = await self._update_submission_status(submission_id, SubmissionStatus.DENIED)
 
         user = self.bot.get_user(submission['user_id'])
 
         if user is None:
             return
 
-        prompt: str = config.prompts[submission['prompt_idx']]
+        prompt: str = config.prompts[submission['prompt_id']]
 
         try:
             await user.send(
@@ -233,7 +239,7 @@ class Queue(ArtemisCog):
                 UPDATE submissions
                 SET status = $2
                 WHERE id = $1
-                RETURNING id, user_id, image_url, prompt_idx, status, message_id, queue_message_id, gallery_message_id
+                RETURNING id, user_id, image_url, prompt_id, status, message_id, queue_message_id
                 """,
                 submission_id,
                 status.value,
@@ -274,11 +280,11 @@ class Queue(ArtemisCog):
 
         async with self.bot.pool.acquire() as conn:
             approved: list[dict] = await conn.fetch(
-                'SELECT image_url, prompt_idx FROM submissions WHERE user_id = $1 AND status = \'approved\'', user.id
+                'SELECT image_url, prompt_id FROM submissions WHERE user_id = $1 AND status = \'approved\'', user.id
             )
 
         for record in approved:
-            data.append({'prompt_id': record['prompt_idx'], 'image_url': record['image_url']})
+            data.append({'prompt_id': record['prompt_id'], 'image_url': record['image_url']})
 
         await self.post_statistics(link, data)
 
