@@ -14,6 +14,7 @@ from .. import Artemis, ArtemisCog, config
 from ..plaques import create_plaque
 from .event_data import EventData, FullSubmission, SubmissionStatus
 from .file_utils import FileUtils
+from .prompts import Prompts
 
 
 log = logging.getLogger(__name__)
@@ -62,6 +63,16 @@ class QueueInterface(discord.ui.View):
         await self.cog.dismiss_submission(submission)
         await queue_message.delete()
 
+    @discord.ui.button(label='Previous Prompt', custom_id='previous', style=discord.ButtonStyle.primary, row=1)
+    @autoload_queue_submission
+    async def previous(self, submission: FullSubmission, queue_message: discord.Message) -> None:
+        await self.cog.increment_prompt(-1, submission, queue_message)
+
+    @discord.ui.button(label='Next Prompt', custom_id='next', style=discord.ButtonStyle.primary, row=1)
+    @autoload_queue_submission
+    async def next(self, submission: FullSubmission, queue_message: discord.Message) -> None:
+        await self.cog.increment_prompt(+1, submission, queue_message)
+
 
 class Queue(ArtemisCog):
     view: QueueInterface
@@ -100,13 +111,11 @@ class Queue(ArtemisCog):
             async with self.lock:
                 await self._process_submission(message, url)
 
+    def queue_text(self, prompt_id: int, image_url: str, user: discord.User | discord.Member) -> str:
+        return f'**{config.prompts[prompt_id]}** ({prompt_id + 1}) submission by **{user}** {user.mention}\n\n{image_url}'
+
     async def _process_submission(self, message: discord.Message, url: str) -> None:
-        from .prompts import Prompts
-
         prompts: Prompts = self.bot.get_cog(Prompts)
-
-        if prompts.current_prompt is None:
-            return
 
         submission_exists: bool = await self.bot.get_cog(EventData).submission_by_image(url) is not None
 
@@ -114,7 +123,7 @@ class Queue(ArtemisCog):
             return
 
         prompt: discord.Message = await self.bot.queue_channel.send(
-            f'**{prompts.current_prompt}** submission by **{message.author}** {message.author.mention}\n\n{url}',
+            self.queue_text(prompts.current_prompt_number, url, message.author),
             view=QueueInterface(self),
         )
 
@@ -131,6 +140,18 @@ class Queue(ArtemisCog):
                 message.id,
                 prompt.id,
             )
+
+    async def increment_prompt(self, amount: int, submission: FullSubmission, queue_message: discord.Message):
+        user: discord.User | None = self.bot.get_user(submission['user_id'])
+        if user is None:
+            return
+
+        new_prompt_id: int = (submission['prompt_id'] + amount) % len(config.prompts)
+
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute('UPDATE submissions SET prompt_id = $1 WHERE id = $2', new_prompt_id, submission['id'])
+
+        await queue_message.edit(content=self.queue_text(new_prompt_id, submission['image_url'], user))
 
     async def approve_submission(self, submission: FullSubmission) -> None:
         await self._update_submission_status(submission['id'], SubmissionStatus.APPROVED)
