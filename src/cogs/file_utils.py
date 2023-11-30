@@ -2,7 +2,6 @@ import io
 import re
 
 import discord
-from discord.ext import commands
 from PIL import Image
 
 from .. import ArtemisCog

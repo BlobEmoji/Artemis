@@ -38,6 +38,7 @@ class Artemis(EventBot):
         self.session = aiohttp.ClientSession(headers={'User-Agent': 'Artemis/2.0 (+https://blobs.gg)'})
 
         cogs: list[str] = [
+            'src.cogs.event_data',
             'src.cogs.file_utils',
             'src.cogs.information',
             'src.cogs.prompts',

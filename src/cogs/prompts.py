@@ -2,9 +2,6 @@ import datetime
 import math
 import time
 
-from asyncpg.exceptions import BranchTransactionAlreadyActiveError
-from discord.ext import commands
-
 from .. import ArtemisCog, config
 
 
