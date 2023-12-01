@@ -166,7 +166,7 @@ class Queue(ArtemisCog):
 
         artwork_url = await file_utils.attempt_reupload('artwork', submission['image_url'])
 
-        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_id]}" (#{prompt_id})'], bold_lines=[0])
+        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_id]}" (#{prompt_id + 1})'], bold_lines=[0])
         plaque = file_utils.upload_image('plaque', plaque)
 
         gallery_message: discord.Message = await self.bot.gallery_channel.send(artwork_url, file=plaque)
