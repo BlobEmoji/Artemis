@@ -18,8 +18,11 @@ days_per_prompt: 3
 
 event_role_requirement: 4
 
-statistics_endpoint: "https://files.lostluma.dev/drawtober-2021.json"
-statistics_authorization: "blobwob"
+image_uploading_endpoint: 'https://put your CDN upload website link here!!'
+image_uploading_authorization: # If you don't fill this in with a real value, this will error out
+
+statistics_endpoint: 'etc. etc. put your website here'
+statistics_authorization: # But this will skip if no value is given
 
 prompts:
   - "Alone"

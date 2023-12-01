@@ -44,7 +44,11 @@ days_per_prompt: int = data['days_per_prompt']
 prompts: list[str] = data['prompts']
 prompts_image_links: list[str] = data['prompts_image_links']
 
-# Statistics endpoint
+# API endpoints for sharing the event data with blobs.gg
+image_uploading_endpoint: str = data['image_uploading_endpoint']
+image_uploading_authorization: str | None = data['image_uploading_authorization']
+
+statistics_endpoint: str = data['statistics_endpoint']
 statistics_authorization: str | None = data['statistics_authorization']
 
 
