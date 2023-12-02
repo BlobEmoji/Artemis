@@ -18,7 +18,7 @@ class Information(ArtemisCog):
         event_data: EventData = self.bot.get_cog(EventData)
 
         approved: int = len(await event_data.submissions_with_status(SubmissionStatus.APPROVED, user.id))
-        current_submission: FullSubmission | None = await event_data.submission_by_prompt(user.id, prompts.current_prompt_number)
+        current_submission: FullSubmission | None = await event_data.submission_by_prompt(user.id, prompts.current_prompt_id)
 
         card: discord.Embed = discord.Embed(
             title=f"{user.name}'s {config.event_name} stats",

@@ -4,7 +4,7 @@ import asyncio
 import functools
 import logging
 import re
-from typing import Callable, Coroutine
+from typing import Any, Callable, Coroutine
 
 import discord
 from discord.ext import commands
@@ -112,7 +112,7 @@ class Queue(ArtemisCog):
                 await self._process_submission(message, url)
 
     def queue_text(self, prompt_id: int, image_url: str, user: discord.User | discord.Member) -> str:
-        return f'**{config.prompts[prompt_id]}** ({prompt_id + 1}) submission by **{user}** {user.mention}\n\n{image_url}'
+        return f'{self.bot.get_cog(Prompts).prompt_text(prompt_id)} submission by **{user}** {user.mention}\n\n{image_url}'
 
     async def _process_submission(self, message: discord.Message, url: str) -> None:
         prompts: Prompts = self.bot.get_cog(Prompts)
@@ -123,7 +123,7 @@ class Queue(ArtemisCog):
             return
 
         prompt: discord.Message = await self.bot.queue_channel.send(
-            self.queue_text(prompts.current_prompt_number, url, message.author),
+            self.queue_text(prompts.current_prompt_id, url, message.author),
             view=QueueInterface(self),
         )
 
@@ -135,7 +135,7 @@ class Queue(ArtemisCog):
                 """,
                 message.author.id,
                 url,
-                prompts.current_prompt_number,
+                prompts.current_prompt_id,
                 SubmissionStatus.PENDING.value,
                 message.id,
                 prompt.id,
@@ -166,7 +166,7 @@ class Queue(ArtemisCog):
 
         artwork_url = await file_utils.attempt_reupload('artwork', submission['image_url'])
 
-        plaque = create_plaque([f'@{member.name}', f'"{config.prompts[prompt_id]}" (#{prompt_id + 1})'], bold_lines=[0])
+        plaque = create_plaque([f'@{member.name}', self.bot.get_cog(Prompts).prompt_text(prompt_id)], bold_lines=[0])
         plaque = file_utils.upload_image('plaque', plaque)
 
         gallery_message: discord.Message = await self.bot.gallery_channel.send(artwork_url, file=plaque)
@@ -196,7 +196,7 @@ class Queue(ArtemisCog):
 
         try:
             await user.send(
-                f'Your {prompt} Drawfest submission has been denied by a staff member.\n\n'
+                f'Your {prompt} {config.event_name} submission has been denied by a staff member.\n\n'
                 f'Please review that your submission was made according to our rules, '
                 f'if you\'re confused about the denial feel free to DM Blob Mail.',
                 allowed_mentions=discord.AllowedMentions(users=[user]),

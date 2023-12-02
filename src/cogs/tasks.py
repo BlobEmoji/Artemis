@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands, tasks
 
 from .. import Artemis, ArtemisCog, config
+from .prompts import Prompts
 
 
 class Tasks(ArtemisCog):
@@ -25,8 +26,6 @@ class Tasks(ArtemisCog):
 
     @tasks.loop(time=datetime.time(0, 0, 0, 0))
     async def update_submission_channel(self) -> None:
-        from .prompts import Prompts
-
         prompts: Prompts = self.bot.get_cog(Prompts)
 
         await self.bot.submission_channel.edit(topic=prompts.get_topic())
@@ -44,12 +43,10 @@ class Tasks(ArtemisCog):
 
     @tasks.loop(time=datetime.time(0, 0, 0, 0))
     async def announce_new_day(self) -> None:
-        from .prompts import Prompts
-
         prompts: Prompts = self.bot.get_cog(Prompts)
 
         await self.bot.submission_channel.send(
-            f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_number + 1})"
+            f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_id + 1})"
         )
 
     @update_submission_channel.before_loop
