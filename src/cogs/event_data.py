@@ -130,7 +130,7 @@ class EventData(ArtemisCog):
         if config.statistics_authorization is None:
             return
 
-        link: str = f'https://api.blobs.gg/v1/users/{user.id}'
+        link: str = f'{config.statistics_endpoint}/v1/users/{user.id}'
 
         data: UserData = {
             "username": user.name,
@@ -144,7 +144,7 @@ class EventData(ArtemisCog):
         if config.statistics_authorization is None:
             return
 
-        link: str = f'https://api.blobs.gg/v1/events/drawfest/{config.start_day.year}/submissions/{user.id}'
+        link: str = f'{config.statistics_endpoint}/v1/events/drawfest/{config.start_day.year}/submissions/{user.id}'
 
         approved_submissions: list[FullSubmission] = await self.bot.get_cog(EventData).submissions_with_status(
             SubmissionStatus.APPROVED, user.id
