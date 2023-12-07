@@ -164,18 +164,23 @@ class Queue(ArtemisCog):
 
         file_utils = self.bot.get_cog(FileUtils)
 
-        artwork_url = await file_utils.attempt_reupload('artwork', submission['image_url'])
+        artwork_url, artwork = await file_utils.attempt_double_reupload('artwork', submission['image_url'], self.bot.event_guild)
 
         plaque = create_plaque([f'@{member.name}', self.bot.get_cog(Prompts).prompt_text(prompt_id)], bold_lines=[0])
         plaque = file_utils.upload_image('plaque', plaque)
 
-        gallery_message: discord.Message = await self.bot.gallery_channel.send(artwork_url, file=plaque)
+        plaque_message: discord.Message = await self.bot.gallery_channel.send(file=plaque)
+        artwork_message: discord.Message = await self.bot.gallery_channel.send(
+            artwork_url if artwork is discord.utils.MISSING else '', file=artwork
+        )
 
         event_data: EventData = self.bot.get_cog(EventData)
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute('UPDATE submissions SET image_url = $1 WHERE id = $2', artwork_url, submission['id'])
-            await conn.execute('INSERT INTO gallery (submission_id, message_id) VALUES ($1, $2)', submission['id'], gallery_message.id)
+
+            for gallery_message in (plaque_message, artwork_message):
+                await conn.execute('INSERT INTO gallery (submission_id, message_id) VALUES ($1, $2)', submission['id'], gallery_message.id)
 
         approved_submissions: int = len(await event_data.submissions_with_status(SubmissionStatus.APPROVED, member.id))
         if approved_submissions >= config.event_role_requirement:

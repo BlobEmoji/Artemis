@@ -29,7 +29,7 @@ class Information(ArtemisCog):
         avatar_url: str = user.display_avatar.with_static_format('png').url
 
         file: discord.File
-        avatar_url, file = await self.bot.get_cog(FileUtils).attempt_reupload('avatar', avatar_url, interaction.guild)
+        avatar_url, file = await self.bot.get_cog(FileUtils).attempt_double_reupload('avatar', avatar_url, interaction.guild)
 
         card.set_thumbnail(url=avatar_url)
 
