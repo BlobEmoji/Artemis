@@ -85,7 +85,7 @@ class Prompts(ArtemisCog):
             info_message += f'All prompts have been revealed!'
 
         if past_prompts:
-            info_message += f'Prompts:\n{past_prompts}'
+            info_message += f'\n\nPrompts:\n{past_prompts}'
 
         return info_message
 
