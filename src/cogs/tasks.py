@@ -34,7 +34,7 @@ class Tasks(ArtemisCog):
         if info_message.author == self.bot.user:
             await info_message.edit(content=prompts.get_info_message())
 
-        if prompts.current_prompt is None:
+        if not prompts.has_new_prompt:
             return
 
         prompt_message: discord.Message = await self.bot.submission_channel.fetch_message(config.current_prompts_message_id)
@@ -45,9 +45,10 @@ class Tasks(ArtemisCog):
     async def announce_new_day(self) -> None:
         prompts: Prompts = self.bot.get_cog(Prompts)
 
-        await self.bot.submission_channel.send(
-            f"It's a new day! The current prompt is {prompts.current_prompt} (#{prompts.current_prompt_id + 1})"
-        )
+        if not prompts.has_new_prompt:
+            return
+
+        await self.bot.submission_channel.send(f"It's a new day! The current prompt is {prompts.prompt_text(prompts.current_prompt_id)}")
 
     @update_submission_channel.before_loop
     async def ensure_ready(self) -> None:

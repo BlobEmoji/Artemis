@@ -21,15 +21,16 @@ class Prompts(ArtemisCog):
         return (datetime.datetime.now().date() - config.start_day).days
 
     @property
-    def current_prompt(self) -> str | None:
-        try:
-            return config.prompts[self.current_prompt_id]
-        except IndexError:
-            return None
+    def final_prompt_id(self) -> int:
+        return len(config.prompts) - 1
+
+    @property
+    def has_new_prompt(self) -> bool:
+        return self.current_day // config.days_per_prompt <= self.final_prompt_id
 
     @property
     def current_prompt_id(self) -> int:
-        return self.current_day // config.days_per_prompt
+        return min(self.current_day // config.days_per_prompt, self.final_prompt_id)
 
     @property
     def current_prompt_timestamp(self) -> int:
@@ -76,7 +77,7 @@ class Prompts(ArtemisCog):
 
         if self.before_event:
             info_message += f'The event starts on {config.start_day}! Come back then!'
-        elif self.during_event:
+        elif self.current_prompt_id <= self.final_prompt_id:
             info_message += (
                 f'The newest prompt is {self.prompt_text(self.current_prompt_id)}!\n'
                 f'The next prompt reveal is at <t:{self.current_prompt_timestamp}>'

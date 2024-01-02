@@ -33,9 +33,8 @@ class Information(ArtemisCog):
 
         card.set_thumbnail(url=avatar_url)
 
-        if prompts.current_prompt is not None:
-            latest_status: str = current_submission['status'] if current_submission is not None else 'unsubmitted'
-            card.add_field(name='Current prompt progress', value=latest_status)
+        latest_status: str = current_submission['status'] if current_submission is not None else 'unsubmitted'
+        card.add_field(name='Current prompt progress', value=latest_status)
 
         await interaction.response.send_message(embed=card, ephemeral=user != interaction.user, file=file)
 
