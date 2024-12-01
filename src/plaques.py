@@ -3,9 +3,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 Color = tuple[int, int, int]
 
-MAIN_BACKGROUND: Color = (146, 111, 191)
-SECONDARY_BACKGROUND: Color = (54, 34, 51)
-TEXT: Color = (255, 246, 224)
+MAIN_BACKGROUND: Color = (255, 255, 255)
+SECONDARY_BACKGROUND: Color = (214, 237, 245)
+TEXT: Color = (44, 85, 209)
 
 TEXT_HEIGHT: int = 36
 
